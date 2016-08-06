@@ -449,6 +449,7 @@ public class SurfaceView extends View {
 
         if (force || creating || formatChanged || sizeChanged || visibleChanged
             || mLeft != mLocation[0] || mTop != mLocation[1]
+            || (mLeft == 0 && mTop == 0) // when fullscreen we need to refresh it
             || mUpdateWindowNeeded || mReportDrawNeeded || redrawNeeded) {
 
             if (DEBUG) Log.i(TAG, "Changes: creating=" + creating

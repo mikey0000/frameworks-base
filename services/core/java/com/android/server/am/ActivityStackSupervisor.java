@@ -78,6 +78,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
+import android.os.DynamicPManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -159,7 +160,10 @@ public final class ActivityStackSupervisor implements DisplayListener {
     private IBinder mToken = new Binder();
     private IStatusBarService mStatusBarService;
     private IDevicePolicyManager mDevicePolicyManager;
-
+    public boolean mIsPerfLockAcquired = false;
+    public boolean mIsExtremeMode = false;
+    DynamicPManager mDPM = DynamicPManager.getInstance();
+    public int mCurSence_pid = 0;
     // For debugging to make sure the caller when acquiring/releasing our
     // wake lock is the system process.
     static final boolean VALIDATE_WAKE_LOCK_CALLER = false;

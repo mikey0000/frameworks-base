@@ -593,6 +593,7 @@ public class MediaPlayer implements SubtitleController.Listener
     // macro invocation in IMediaPlayer.cpp
     private final static String IMEDIA_PLAYER = "android.media.IMediaPlayer";
 
+    private final static Boolean AW_MODE = true;
     private long mNativeContext; // accessed by native methods
     private long mNativeSurfaceTexture;  // accessed by native methods
     private int mListenerContext; // accessed by native methods
@@ -652,6 +653,8 @@ public class MediaPlayer implements SubtitleController.Listener
     private static final int INVOKE_ID_DESELECT_TRACK = 5;
     private static final int INVOKE_ID_SET_VIDEO_SCALE_MODE = 6;
     private static final int INVOKE_ID_GET_SELECTED_TRACK = 7;
+	 private static final int INVOKE_ID_SET_3D_MODE = 128;
+    private static final int INVOKE_ID_GET_3D_MODE = 129;
 
     /**
      * Create a request parcel which can be routed to the native media
@@ -1077,11 +1080,19 @@ public class MediaPlayer implements SubtitleController.Listener
         }
 
         final File file = new File(path);
+		FileInputStream is = null;
         if (file.exists()) {
-            FileInputStream is = new FileInputStream(file);
-            FileDescriptor fd = is.getFD();
-            setDataSource(fd);
-            is.close();
+			try{
+	            is = new FileInputStream(file);
+	            FileDescriptor fd = is.getFD();
+	            setDataSource(fd);
+			}finally{
+		        try {
+					if (is != null) {
+						is.close();
+						}
+					} catch (Exception e) {}
+			}
         } else {
             throw new IOException("setDataSource failed.");
         }
@@ -1916,13 +1927,73 @@ public class MediaPlayer implements SubtitleController.Listener
      * MIME type for CEA-608 closed caption data.
      * @hide
      */
+ public static final String MEDIA_MIMETYPE_TEXT_IDXSUB 	= "application/idx-sub";
+    public static final String MEDIA_MIMETYPE_TEXT_SUB 	= "application/sub";
+    public static final String MEDIA_MIMETYPE_TEXT_SMI	= "text/smi";
+    public static final String MEDIA_MIMETYPE_TEXT_RT	= "text/rt";
+    public static final String MEDIA_MIMETYPE_TEXT_TXT 	= "text/txt";
+    public static final String MEDIA_MIMETYPE_TEXT_SSA 	= "text/ssa";
+    public static final String MEDIA_MIMETYPE_TEXT_AQT 	= "text/aqt";
+    public static final String MEDIA_MIMETYPE_TEXT_JSS 	= "text/jss";
+    public static final String MEDIA_MIMETYPE_TEXT_JS	= "text/js";
+    public static final String MEDIA_MIMETYPE_TEXT_ASS 	= "text/ass";
+    public static final String MEDIA_MIMETYPE_TEXT_VSF 	= "text/vsf";
+    public static final String MEDIA_MIMETYPE_TEXT_TTS 	= "text/tts";
+    public static final String MEDIA_MIMETYPE_TEXT_STL 	= "text/stl";
+    public static final String MEDIA_MIMETYPE_TEXT_ZEG 	= "text/zeg";
+    public static final String MEDIA_MIMETYPE_TEXT_OVR 	= "text/ovr";
+    public static final String MEDIA_MIMETYPE_TEXT_DKS 	= "text/dks";
+    public static final String MEDIA_MIMETYPE_TEXT_LRC 	= "text/lrc";
+    public static final String MEDIA_MIMETYPE_TEXT_PAN 	= "text/pan";
+    public static final String MEDIA_MIMETYPE_TEXT_SBT 	= "text/sbt";
+    public static final String MEDIA_MIMETYPE_TEXT_VKT 	= "text/vkt";
+    public static final String MEDIA_MIMETYPE_TEXT_PJS 	= "text/pjs";
+    public static final String MEDIA_MIMETYPE_TEXT_MPL 	= "text/mpl";
+    public static final String MEDIA_MIMETYPE_TEXT_SCR 	= "text/scr";
+    public static final String MEDIA_MIMETYPE_TEXT_PSB 	= "text/psb";
+    public static final String MEDIA_MIMETYPE_TEXT_ASC 	= "text/asc";
+    public static final String MEDIA_MIMETYPE_TEXT_RTF 	= "text/rtf";
+    public static final String MEDIA_MIMETYPE_TEXT_S2K 	= "text/s2k";
+    public static final String MEDIA_MIMETYPE_TEXT_SST 	= "text/sst";
+    public static final String MEDIA_MIMETYPE_TEXT_SON 	= "text/son";
+    public static final String MEDIA_MIMETYPE_TEXT_SSTS 	= "text/ssts";
     public static final String MEDIA_MIMETYPE_TEXT_CEA_608 = "text/cea-608";
 
     /*
      * A helper function to check if the mime type is supported by media framework.
      */
     private static boolean availableMimeTypeForExternalSource(String mimeType) {
-        if (MEDIA_MIMETYPE_TEXT_SUBRIP.equals(mimeType)) {
+        if (mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SUBRIP))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_IDXSUB))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SUB))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SMI))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_RT))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_TXT))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SSA))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_AQT))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_JSS))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_JS))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_ASS))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_VSF))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_TTS))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_STL))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_ZEG))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_OVR))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_DKS))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_LRC))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_PAN))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SBT))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_VKT))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_PJS))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_MPL))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SCR))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_PSB))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_ASC))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_RTF))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_S2K))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SST))	
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SON))
+    		|| mimeType.equals(new String(MEDIA_MIMETYPE_TEXT_SSTS))) {
             return true;
         }
         return false;
@@ -1954,7 +2025,22 @@ public class MediaPlayer implements SubtitleController.Listener
             }
             SubtitleTrack track = mInbandSubtitleTracks[index];
             if (track != null) {
-                track.onData(data);
+				if(!AW_MODE)  {
+                		track.onData(data);
+				}
+				else {
+					try {
+	                    long runID = data.getStartTimeUs() + 1;
+	                    // TODO: move conversion into track
+	                    track.onData(new String(data.getData(), "UTF-8"), true /* eos */, runID);
+	                    track.setRunDiscardTimeMs(
+	                            runID,
+	                            (data.getStartTimeUs() + data.getDurationUs()) / 1000);
+	                } catch (java.io.UnsupportedEncodingException e) {
+	                    Log.w(TAG, "subtitle data for track " + index + " is not UTF-8 encoded: " + e);
+	                }
+				
+				}
             }
         }
     };
@@ -2025,7 +2111,12 @@ public class MediaPlayer implements SubtitleController.Listener
                 }
                 scanner.close();
                 mOutOfBandSubtitleTracks.add(track);
-                track.onData(contents.getBytes(), true /* eos */, ~0 /* runID: keep forever */);
+				if (false) {
+                	track.onData(contents.getBytes(), true /* eos */, ~0 /* runID: keep forever */);
+				}
+				else {
+					track.onData(contents, true /* eos */, ~0 /* runID: keep forever */);
+				}
                 return MEDIA_INFO_EXTERNAL_METADATA_UPDATE;
             }
 
@@ -2181,11 +2272,35 @@ public class MediaPlayer implements SubtitleController.Listener
      * @throws IllegalArgumentException if the mimeType is not supported.
      * @throws IllegalStateException if called in an invalid state.
      */
+	 
+	 
+	 
+	 
+	 
     public void addTimedTextSource(FileDescriptor fd, long offset, long length, String mime)
             throws IllegalArgumentException, IllegalStateException {
         if (!availableMimeTypeForExternalSource(mime)) {
             throw new IllegalArgumentException("Illegal mimeType for timed text source: " + mime);
         }
+		if(AW_MODE) {
+			Parcel request = Parcel.obtain();
+	        Parcel reply = Parcel.obtain();
+	        try {
+	            request.writeInterfaceToken(IMEDIA_PLAYER);
+	            request.writeInt(INVOKE_ID_ADD_EXTERNAL_SOURCE_FD);
+	            request.writeFileDescriptor(fd);
+	            request.writeLong(offset);
+	            request.writeLong(length);
+	            request.writeString(mime);
+	            invoke(request, reply);
+	        } finally {
+	            request.recycle();
+	            reply.recycle();
+				return ;
+	        }
+	    }	
+		
+
 
         FileDescriptor fd2;
         try {
@@ -2371,18 +2486,20 @@ public class MediaPlayer implements SubtitleController.Listener
             throws IllegalStateException {
         // handle subtitle track through subtitle controller
         SubtitleTrack track = null;
-        synchronized (mInbandSubtitleLock) {
-            if (mInbandSubtitleTracks.length == 0) {
-                TrackInfo[] tracks = getInbandTrackInfo();
-                mInbandSubtitleTracks = new SubtitleTrack[tracks.length];
-                for (int i=0; i < tracks.length; i++) {
-                    if (tracks[i].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) {
-                        mInbandSubtitleTracks[i] = mSubtitleController.addTrack(tracks[i].getFormat());
-                    }
-                }
-            }
-        }
 
+		if(false) {
+	        synchronized (mInbandSubtitleLock) {
+	            if (mInbandSubtitleTracks.length == 0) {
+	                TrackInfo[] tracks = getInbandTrackInfo();
+	                mInbandSubtitleTracks = new SubtitleTrack[tracks.length];
+	                for (int i=0; i < tracks.length; i++) {
+	                    if (tracks[i].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) {
+	                        mInbandSubtitleTracks[i] = mSubtitleController.addTrack(tracks[i].getFormat());
+	                    }
+	                }
+	            }
+	        }
+		}
         if (index < mInbandSubtitleTracks.length) {
             track = mInbandSubtitleTracks[index];
         } else if (index < mInbandSubtitleTracks.length + mOutOfBandSubtitleTracks.size()) {
@@ -2391,6 +2508,7 @@ public class MediaPlayer implements SubtitleController.Listener
 
         if (mSubtitleController != null && track != null) {
             if (select) {
+		      if(!AW_MODE) {
                 if (track.isTimedText()) {
                     int ttIndex = getSelectedTrack(TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT);
                     if (ttIndex >= 0 && ttIndex < mInbandSubtitleTracks.length) {
@@ -2398,6 +2516,7 @@ public class MediaPlayer implements SubtitleController.Listener
                         selectOrDeselectInbandTrack(ttIndex, false);
                     }
                 }
+			 }	
                 mSubtitleController.selectTrack(track);
             } else if (mSubtitleController.getSelectedTrack() == track) {
                 mSubtitleController.selectTrack(null);
@@ -2500,7 +2619,7 @@ public class MediaPlayer implements SubtitleController.Listener
     private static final int MEDIA_ERROR = 100;
     private static final int MEDIA_INFO = 200;
     private static final int MEDIA_SUBTITLE_DATA = 201;
-
+	private static final int MEDIA_SOURCE_DETECTED = 234;	//Add by Bevis.
     private TimeProvider mTimeProvider;
 
     /** @hide */
@@ -2639,6 +2758,16 @@ public class MediaPlayer implements SubtitleController.Listener
             case MEDIA_NOP: // interface test message - ignore
                 break;
 
+            case MEDIA_SOURCE_DETECTED:
+                if (mDlnaSourceDetector != null && msg.obj != null){
+                	if(msg.obj instanceof Parcel){
+	                	Parcel parcel = (Parcel)msg.obj;
+                        // parcel.setDataPosition(0);
+	                	String url = parcel.readString();
+	                	Log.d(TAG, "##### MEDIA_SOURCE_DETECTED! url = " + url);
+	                	mDlnaSourceDetector.onSourceDetected(url);
+                	}
+				}
             default:
                 Log.e(TAG, "Unknown message type " + msg.what);
                 return;
@@ -3469,4 +3598,285 @@ public class MediaPlayer implements SubtitleController.Listener
             }
         }
     }
+
+	public static class MediaPlayerInfo{
+    	public int     width;
+		public int     height;
+		public int     codecType;         //0: sw;   1: hw;
+    	public int     playState;         //0: pause 1: play
+    };
+	
+    public native static int getMediaPlayerList();
+	public native static int getMediaPlayerInfo(int mediaPlayerId, MediaPlayerInfo mediaPlayerInfo);
+ 
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-9-13 9:50:50 */
+
+    /**
+     * Set the subtitle¡¯s charset. If the underlying mediaplayer can absolutely parse the charset 
+     * of the subtitles, still use the parsed charset; otherwise, use the charset argument.
+     * <p>
+     * 
+     * @param charset  the canonical name of a charset.
+     * @return ==0 means successful, !=0 means failed.
+     */
+    public native int setSubCharset(String charset);
+    
+    /**
+    * Get the subtitle¡¯s charset.
+    * <p>
+    * 
+    * @return the canonical name of a charset.
+    */
+    public native String getSubCharset(); 
+    
+    /**
+     * Set the subtitle¡¯s delay time.
+     * <p>
+     * 
+     * @param time delay time in milliseconds. It can be <0.
+     * @return ==0 means successful, !=0 means failed.
+     */
+    public native int setSubDelay(int time); 
+    
+    /**
+     * Get the subtitle¡¯s delay time.
+     * <p>
+     * 
+     * @return delay time in milliseconds.
+     */
+    public native int getSubDelay();
+    
+    /**
+     * charset list
+     */
+    public static final String CHARSET_UNKNOWN                   = "UNKNOWN";                       //ÎÞ·¨Ê¶±ð³öÀ´µÄ×Ö·û¼¯
+    public static final String CHARSET_BIG5                      = "Big5";                          //·±ÌåÖÐÎÄ
+    public static final String CHARSET_BIG5_HKSCS                = "Big5-HKSCS";                    //
+    public static final String CHARSET_BOCU_1                    = "BOCU-1";                        //
+    public static final String CHARSET_CESU_8                    = "CESU-8";                        //
+    public static final String CHARSET_CP864                     = "cp864";                         //
+    public static final String CHARSET_EUC_JP                    = "EUC-JP";                        //
+    public static final String CHARSET_EUC_KR                    = "EUC-KR";                        //
+    public static final String CHARSET_GB18030                   = "GB18030";                       //
+    public static final String CHARSET_GBK                       = "GBK";                           //¼òÌåÖÐÎÄ
+    public static final String CHARSET_HZ_GB_2312                = "HZ-GB-2312";                    //
+    public static final String CHARSET_ISO_2022_CN               = "ISO-2022-CN";                   //
+    public static final String CHARSET_ISO_2022_CN_EXT           = "ISO-2022-CN-EXT";               //
+    public static final String CHARSET_ISO_2022_JP               = "ISO-2022-JP";                   //
+    public static final String CHARSET_ISO_2022_KR               = "ISO-2022-KR";                   //º«ÎÄ
+    public static final String CHARSET_ISO_8859_1                = "ISO-8859-1";                    //Î÷Å·ÓïÏµ
+    public static final String CHARSET_ISO_8859_10               = "ISO-8859-10";                   //±±Å·Ë¹¿°µÄÄÉÎ¬ÑÇÓïÏµ
+    public static final String CHARSET_ISO_8859_13               = "ISO-8859-13";                   //²¨ÂÞµÄº£ÓïÏµ                  
+    public static final String CHARSET_ISO_8859_14               = "ISO-8859-14";                   //¿­¶ûÌØÈËÓïÏµ                  
+    public static final String CHARSET_ISO_8859_15               = "ISO-8859-15";                   //À©Õ¹ÁË·¨ÓïºÍ·ÒÀ¼ÓïµÄÎ÷Å·ÓïÏµ  
+    public static final String CHARSET_ISO_8859_16               = "ISO-8859-16";                   //À©Õ¹µÄ¶«ÄÏÅ·ÓïÏµ   
+    public static final String CHARSET_ISO_8859_2                = "ISO-8859-2";                    //ÖÐÅ·ÓïÑÔ          
+    public static final String CHARSET_ISO_8859_3                = "ISO-8859-3";                    //ÄÏÅ·ÓïÑÔ          
+    public static final String CHARSET_ISO_8859_4                = "ISO-8859-4";                    //±±Å·ÓïÑÔ          
+    public static final String CHARSET_ISO_8859_5                = "ISO-8859-5";                    //Î÷Àï¶û×ÖÄ¸        
+    public static final String CHARSET_ISO_8859_6                = "ISO-8859-6";                    //°¢À­²®Óï          
+    public static final String CHARSET_ISO_8859_7                = "ISO-8859-7";                    //Ï£À°Óï            
+    public static final String CHARSET_ISO_8859_8                = "ISO-8859-8";                    //Ï£²®À´Óï
+    public static final String CHARSET_ISO_8859_9                = "ISO-8859-9";                    //ÍÁ¶úÆäÓï  
+    public static final String CHARSET_KOI8_R                    = "KOI8-R";                        //¶íÎÄ
+    public static final String CHARSET_KOI8_U                    = "KOI8-U";                        //
+    public static final String CHARSET_MACINTOSH                 = "macintosh";                     //
+    public static final String CHARSET_SCSU                      = "SCSU";                          //
+    public static final String CHARSET_SHIFT_JIS                 = "Shift_JIS";                     //ÈÕÎÄ
+    public static final String CHARSET_TIS_620                   = "TIS-620";                       //Ì©ÎÄ
+    public static final String CHARSET_US_ASCII                  = "US-ASCII";                      //
+    public static final String CHARSET_UTF_16                    = "UTF-16";                        //
+    public static final String CHARSET_UTF_16BE                  = "UTF-16BE";                      //UTF16 big endian
+    public static final String CHARSET_UTF_16LE                  = "UTF-16LE";                      //UTF16 little endian
+    public static final String CHARSET_UTF_32                    = "UTF-32";                        //
+    public static final String CHARSET_UTF_32BE                  = "UTF-32BE";                      //
+    public static final String CHARSET_UTF_32LE                  = "UTF-32LE";                      //
+    public static final String CHARSET_UTF_7                     = "UTF-7";                         //
+    public static final String CHARSET_UTF_8                     = "UTF-8";                         //UTF8
+    public static final String CHARSET_WINDOWS_1250              = "windows-1250";                  //ÖÐÅ·                 
+    public static final String CHARSET_WINDOWS_1251              = "windows-1251";                  //Î÷Àï¶ûÎÄ             
+    public static final String CHARSET_WINDOWS_1252              = "windows-1252";                  //ÍÁ¶úÆäÓï
+    public static final String CHARSET_WINDOWS_1253              = "windows-1253";                  //Ï£À°ÎÄ     
+    public static final String CHARSET_WINDOWS_1254              = "windows-1254";                  //Î÷Å·ÓïÏµ
+    public static final String CHARSET_WINDOWS_1255              = "windows-1255";                  //Ï£²®À´ÎÄ             
+    public static final String CHARSET_WINDOWS_1256              = "windows-1256";                  //°¢À­²®ÎÄ   
+    public static final String CHARSET_WINDOWS_1257              = "windows-1257";                  //²¨ÂÞµÄº£ÎÄ 
+    public static final String CHARSET_WINDOWS_1258              = "windows-1258";                  //Ô½ÄÏ       
+    public static final String CHARSET_X_DOCOMO_SHIFT_JIS_2007   = "x-docomo-shift_jis-2007";       //
+    public static final String CHARSET_X_GSM_03_38_2000          = "x-gsm-03.38-2000";              //
+    public static final String CHARSET_X_IBM_1383_P110_1999      = "x-ibm-1383_P110-1999";          //
+    public static final String CHARSET_X_IMAP_MAILBOX_NAME       = "x-IMAP-mailbox-name";           //
+    public static final String CHARSET_X_ISCII_BE                = "x-iscii-be";                    //
+    public static final String CHARSET_X_ISCII_DE                = "x-iscii-de";                    //
+    public static final String CHARSET_X_ISCII_GU                = "x-iscii-gu";                    //
+    public static final String CHARSET_X_ISCII_KA                = "x-iscii-ka";                    //
+    public static final String CHARSET_X_ISCII_MA                = "x-iscii-ma";                    //
+    public static final String CHARSET_X_ISCII_OR                = "x-iscii-or";                    //
+    public static final String CHARSET_X_ISCII_PA                = "x-iscii-pa";                    //
+    public static final String CHARSET_X_ISCII_TA                = "x-iscii-ta";                    //
+    public static final String CHARSET_X_ISCII_TE                = "x-iscii-te";                    //
+    public static final String CHARSET_X_ISO_8859_11_2001        = "x-iso-8859_11-2001";            //
+    public static final String CHARSET_X_JAVAUNICODE             = "x-JavaUnicode";                 //
+    public static final String CHARSET_X_KDDI_SHIFT_JIS_2007     = "x-kddi-shift_jis-2007";         //
+    public static final String CHARSET_X_MAC_CYRILLIC            = "x-mac-cyrillic";                //
+    public static final String CHARSET_X_SOFTBANK_SHIFT_JIS_2007 = "x-softbank-shift_jis-2007";     //
+    public static final String CHARSET_X_UNICODEBIG              = "x-UnicodeBig";                  //
+    public static final String CHARSET_X_UTF_16LE_BOM            = "x-UTF-16LE-BOM";                //
+    public static final String CHARSET_X_UTF16_OPPOSITEENDIAN    = "x-UTF16_OppositeEndian";        //
+    public static final String CHARSET_X_UTF16_PLATFORMENDIAN    = "x-UTF16_PlatformEndian";        //
+    public static final String CHARSET_X_UTF32_OPPOSITEENDIAN    = "x-UTF32_OppositeEndian";        //
+    public static final String CHARSET_X_UTF32_PLATFORMENDIAN    = "x-UTF32_PlatformEndian";        //
+    
+    /*
+     * input 3D picture format list.
+     * defined by ChenXiaoChuan.
+     */
+	public static final int PICTURE_3D_MODE_NONE					= 0;		//* 2D
+	public static final int PICTURE_3D_MODE_DOUBLE_STREAM			= 1;		//* ·ÖÍ¼¸ñÊ½
+	public static final int PICTURE_3D_MODE_SIDE_BY_SIDE			= 2;		//* ×óÓÒ¸ñÊ½
+	public static final int PICTURE_3D_MODE_TOP_TO_BOTTOM			= 3;		//* ÉÏÏÂ¸ñÊ½
+	public static final int PICTURE_3D_MODE_LINE_INTERLEAVE			= 4;		//* ÐÐ½»Ö¯¸ñÊ½
+	public static final int PICTURE_3D_MODE_COLUME_INTERLEAVE		= 5;		//* ÁÐ½»Ö¯¸ñÊ½
+    
+    /*
+     * 3D picture display method, defined how to display pictures.
+     * defined by ChenXiaoChuan.
+     */
+	public static final int DISPLAY_3D_MODE_2D				= 0;	//* ÏÔÊ¾2DÍ¼Ïñ£¬¶ÔÓÚ·ÖÍ¼¸ñÊ½£¬Ö»ÏÔÊ¾Ò»¸öÍ¼£¬¶ÔÓÚÉÏÏÂ»ò×óÓÒ¸ñÊ½£¬ÏÔÊ¾Á½¸öÍ¼
+	public static final int DISPLAY_3D_MODE_3D				= 1;	//* ÏÔÊ¾3DÍ¼Ïñ
+	public static final int DISPLAY_3D_MODE_HALF_PICTURE	= 2;	//* ÏÔÊ¾°ëÍ¼£¬¶ÔÓÚ×óÓÒ»òÉÏÏÂ¸ñÊ½µÄÍ¼ÏñÓÐÓÃ
+	public static final int DISPLAY_3D_MODE_ANAGLAGH		= 3;	//* ÏÔÊ¾·ÖÉ«Í¼Ïñ£¬¿ÉÒÔ½«×óÓÒ»òÕßÉÏÏÂ¸ñÊ½µÄÍ¼Ïñ×ª»»³É·ÖÉ«Í¼ÏñÏÔÊ¾
+    
+    /* 
+     * anaglagh type list
+     */
+	public static final int ANAGLAGH_RED_BLUE		= 0;
+	public static final int ANAGLAGH_RED_GREEN		= 1;
+	public static final int ANAGLAGH_RED_CYAN		= 2;
+	public static final int ANAGLAGH_COLOR			= 3;
+	public static final int ANAGLAGH_HALF_COLOR		= 4;
+	public static final int ANAGLAGH_OPTIMIZED		= 5;
+	public static final int ANAGLAGH_YELLOW_BLUE	= 6;
+    
+    
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-11-14 */
+    /* support scale mode */
+    /**
+     * enable or disable scale mode for playing video.
+     * <p>
+     * 
+	 * @param enable if true, enable the scale mode, else disable the scale mode.
+	 * @param width  the expected width of the video. Only valid when enable.
+	 * @param height  the expected height of the video. Only valid when enable.
+     */
+    public native void enableScaleMode(boolean enable, int width, int height);
+    /* add by Gary. end   -----------------------------------}} */
+
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-03-07 */
+    /* set audio channel mute */
+
+	public static final int AUDIO_CHANNEL_MUTE_NONE  = 0;
+	public static final int AUDIO_CHANNEL_MUTE_LEFT  = 1;
+	public static final int AUDIO_CHANNEL_MUTE_RIGHT = 2;
+	public static final int AUDIO_CHANNEL_MUTE_ALL   = 3;
+
+    /**
+     * set the audio channel mute mode
+     * <p>
+     * 
+     * @param muteMode  mute mode
+     * @return ==0 means successful, !=0 means failed.
+     */
+    public native int setChannelMuteMode(int muteMode); 
+
+    /**
+     * get the audio channel mute mode
+     * <p>
+     * 
+     * @return the audio channel mute mode.
+     */
+    public native int getChannelMuteMode(); 
+
+    /* add by Gary. end   -----------------------------------}} */
+
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-03-12 */
+    /* add the global interfaces to control the subtitle gate  */
+
+    /**
+     * show or hide a subitle.
+     * <p>
+     * 
+     * @param showSub  whether to show subtitle or not
+     * @return ==0 means successful, !=0 means failed.
+     */
+    public static native int setGlobalSubGate(boolean showSub); 
+    
+    /**
+     * check whether subtitles is allowed showing.
+     * <p>
+     * 
+     * @return true if subtitles is allowed showing, false otherwise.
+     */
+    public static native boolean getGlobalSubGate();
+    
+    /* add by Gary. end   -----------------------------------}} */
+
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-4-24 */
+    /* add two general interfaces for expansibility */
+    
+    /**
+     * show or hide a subitle.
+     * <p>
+     * 
+     * @param enable  whether to start the BD folder play mode.
+     * @return ==0 means successful, !=0 means failed.
+     */
+    public native int setBdFolderPlayMode(boolean enable); 
+    
+    /**
+     * check whether is in BD folder play mode.
+     * <p>
+     * 
+     * @return true if is in BD folder play mode, false otherwise.
+     */
+    public native boolean getBdFolderPlayMode();
+    /* add by Gary. end   -----------------------------------}} */
+
+    public native int setPresentationScreen(int screen); 
+    public native int getPresentationScreen();
+    public native int releaseSurfaceByHand();
+    
+    /*Start by Bevis. Rotate the video.*/
+	public static native boolean isRotatable();
+    public static native int setRotation(int rotation); 
+    /*End by Bevis. Rotate the video.*/
+	
+	/*Add by eric_wang. Notify hdmi status.*/
+    public static native int setHdmiState(boolean bHdmiPlugged); 
+    /*End by eric_wang. Notify hdmi status.*/
+
+    /*Start by Bevis. Detect http data source from other application.*/
+	public interface DlnaSourceDetector{
+		void onSourceDetected(String url);
+	}
+
+	private DlnaSourceDetector mDlnaSourceDetector;
+	private static final String DLNA_SOURCE_DETECTOR = "com.softwinner.dlnasourcedetector";
+	
+	public void setDlnaSourceDetector(DlnaSourceDetector detector){
+		mDlnaSourceDetector = detector;
+		try{
+			setDataSource(DLNA_SOURCE_DETECTOR);
+		}
+		catch(Exception e){
+			Log.e(TAG, "Fail to set DlnaSourceDetector..");
+			e.printStackTrace();
+		}
+	}
+	/*End by Bevis. Detect data source from other application.*/    
 }

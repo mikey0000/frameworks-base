@@ -52,6 +52,8 @@
 #include <RenderNode.h>
 #include <renderthread/RenderProxy.h>
 
+#include <gui/SurfaceComposerClient.h>
+
 // ----------------------------------------------------------------------------
 
 namespace android {
@@ -417,6 +419,12 @@ static void destroy(JNIEnv* env, jclass clazz, jlong rendererPtr) {
 
 } // uirenderer
 
+/* add by allwinner */
+static jint nativeSetDisplayParameter(JNIEnv* env, jclass clazz,
+        jint displayId, jint cmd, jint para0, jint para1, jint para2) {
+    return SurfaceComposerClient::setDisplayParameter(displayId, cmd, para0, para1, para2);
+}
+
 // ----------------------------------------------------------------------------
 
 namespace hwui = android::uirenderer;
@@ -450,6 +458,7 @@ static JNINativeMethod gSurfaceMethods[] = {
     {"nHwuiSetSurface", "(JJ)V", (void*) hwui::setSurface },
     {"nHwuiDraw", "(J)V", (void*) hwui::draw },
     {"nHwuiDestroy", "(J)V", (void*) hwui::destroy },
+	{"nativeSetDisplayParameter", "(IIIII)I", (void*)nativeSetDisplayParameter },
 };
 
 int register_android_view_Surface(JNIEnv* env)

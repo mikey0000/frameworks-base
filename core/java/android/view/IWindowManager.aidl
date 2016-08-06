@@ -263,4 +263,18 @@ interface IWindowManager
      * @return The frame statistics or null if the window does not exist.
      */
     WindowContentFrameStats getWindowContentFrameStats(IBinder token);
+    /**
+     * Sets the current touch exploration state.
+     *
+     * @param enabled Whether touch exploration is enabled.
+     */
+    void keyEnterMouseMode();
+
+    void keyExitMouseMode();
+
+    void keySetMouseMoveCode(int left,int right,int top,int bottom);
+
+    void keySetMouseBtnCode(int leftbtn,int midbtn,int rightbtn);
+
+    void keySetMouseDistance(int distance);
 }

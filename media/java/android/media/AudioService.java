@@ -498,7 +498,7 @@ public class AudioService extends IAudioService.Stub {
             = new RemoteCallbackList<IAudioRoutesObserver>();
 
     // Devices for which the volume is fixed and VolumePanel slider should be disabled
-    int mFixedVolumeDevices = AudioSystem.DEVICE_OUT_HDMI |
+    int mFixedVolumeDevices = //AudioSystem.DEVICE_OUT_HDMI |
             AudioSystem.DEVICE_OUT_DGTL_DOCK_HEADSET |
             AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET |
             AudioSystem.DEVICE_OUT_HDMI_ARC |
@@ -4725,6 +4725,7 @@ public class AudioService extends IAudioService.Stub {
     {
         Intent intent = new Intent();
 
+        intent.putExtra("device", device);
         intent.putExtra("state", state);
         intent.putExtra("name", name);
         intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);

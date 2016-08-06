@@ -1215,7 +1215,9 @@ public final class StrictMode {
 
             final IWindowManager windowManager = (info.policy & PENALTY_FLASH) != 0 ?
                     sWindowManager.get() : null;
-            if (windowManager != null) {
+			boolean doFlashes = SystemProperties.getBoolean(VISUAL_PROPERTY, false)
+                && !amTheSystemServerProcess();
+            if (windowManager != null && doFlashes) {
                 try {
                     windowManager.showStrictModeViolation(true);
                 } catch (RemoteException unused) {

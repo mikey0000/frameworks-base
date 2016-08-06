@@ -57,6 +57,7 @@ public class PhoneStatusBarPolicy {
     private static final String SLOT_VOLUME = "volume";
     private static final String SLOT_CDMA_ERI = "cdma_eri";
     private static final String SLOT_ALARM_CLOCK = "alarm_clock";
+    private static final String SLOT_HEADSET = "headset";
 
     private final Context mContext;
     private final StatusBarManager mService;
@@ -74,6 +75,8 @@ public class PhoneStatusBarPolicy {
     private int mZen;
 
     private boolean mBluetoothEnabled = false;
+
+    private int mHeadsetState = 0;
 
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
@@ -102,6 +105,8 @@ public class PhoneStatusBarPolicy {
             }
             else if (action.equals(Intent.ACTION_USER_SWITCHED)) {
                 updateAlarm();
+            }else if (action.equals(Intent.ACTION_HEADSET_PLUG)) {
+                updateHeadset(intent);
             }
         }
     };
@@ -123,6 +128,7 @@ public class PhoneStatusBarPolicy {
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelecomManager.ACTION_CURRENT_TTY_MODE_CHANGED);
         filter.addAction(Intent.ACTION_USER_SWITCHED);
+        filter.addAction(Intent.ACTION_HEADSET_PLUG);
         mContext.registerReceiver(mIntentReceiver, filter, null, mHandler);
 
         // TTY status
@@ -163,6 +169,10 @@ public class PhoneStatusBarPolicy {
         mService.setIcon(SLOT_HOTSPOT, R.drawable.stat_sys_hotspot, 0, null);
         mService.setIconVisibility(SLOT_HOTSPOT, mHotspot.isHotspotEnabled());
         mHotspot.addCallback(mHotspotCallback);
+
+        // headset
+        mService.setIcon(SLOT_HEADSET, R.drawable.headset, 0, null);
+        mService.setIconVisibility(SLOT_HEADSET, false );
     }
 
     public void setZenMode(int zen) {
@@ -324,4 +334,15 @@ public class PhoneStatusBarPolicy {
             updateCast();
         }
     };
+    private final void updateHeadset(Intent intent) {
+        int device = intent.getIntExtra("device" , 0);
+        int state = intent.getIntExtra("state" , 0);
+        Log.d(TAG, "updateHeadset: device=" + device + ", state=" + state);
+        if (state == 0) {
+            mHeadsetState &= ~device;
+        } else {
+            mHeadsetState |= device;
+        }
+        mService.setIconVisibility(SLOT_HEADSET, (mHeadsetState!=0) ? true : false );
+    }
 }

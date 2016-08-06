@@ -193,6 +193,11 @@ public class InputManagerService extends IInputManager.Stub
     private static native void nativeCancelVibrate(long ptr, int deviceId, int token);
     private static native void nativeReloadKeyboardLayouts(long ptr);
     private static native void nativeReloadDeviceAliases(long ptr);
+	private static native void nativeKeyEnterMouseMode(long ptr);
+	private static native void nativeKeyExitMouseMode(long ptr);
+	private static native void nativeKeySetMouseDistance(long ptr,int distance);
+	private static native void nativeKeySetMouseMoveCode(long ptr,int left,int right,int top,int bottom);
+	private static native void nativeKeySetMouseBtnCode(long ptr,int leftbtn,int midbtn,int rightbtn);
     private static native String nativeDump(long ptr);
     private static native void nativeMonitor(long ptr);
 
@@ -1259,6 +1264,32 @@ public class InputManagerService extends IInputManager.Stub
         nativeSetShowTouches(mPtr, setting != 0);
     }
 
+	public void KeyEnterMouseMode()
+	{
+	    Log.d(TAG,"KeyEnterMouseMode");
+		nativeKeyEnterMouseMode(mPtr);
+	}
+
+	public void KeyExitMouseMode()
+	{
+	    Log.d(TAG,"KeyExitMouseMode");
+		nativeKeyExitMouseMode(mPtr);
+	}
+
+	public void KeySetMouseDistance(int distance)
+	{
+		nativeKeySetMouseDistance(mPtr,distance);
+	}
+
+	public void KeySetMouseMoveCode(int left,int right,int top,int bottom)
+	{
+		nativeKeySetMouseMoveCode(mPtr,left,right,top,bottom);
+	}
+
+	public void KeySetMouseBtnCode(int leftbtn,int midbtn,int rightbtn)
+	{
+		nativeKeySetMouseBtnCode(mPtr,leftbtn,midbtn,rightbtn);
+	}		 
     private void registerShowTouchesSettingObserver() {
         mContext.getContentResolver().registerContentObserver(
                 Settings.System.getUriFor(Settings.System.SHOW_TOUCHES), true,

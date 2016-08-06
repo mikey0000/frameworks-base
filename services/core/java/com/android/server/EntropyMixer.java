@@ -136,7 +136,7 @@ public class EntropyMixer extends Binder {
     private void writeEntropy() {
         try {
             Slog.i(TAG, "Writing entropy...");
-            RandomBlock.fromFile(randomDevice).toFile(entropyFile, true);
+            RandomBlock.fromFile(randomDevice).toFile(entropyFile, false);
         } catch (IOException e) {
             Slog.w(TAG, "Unable to write entropy", e);
         }

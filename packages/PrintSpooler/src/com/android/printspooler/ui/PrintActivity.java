@@ -329,7 +329,7 @@ public class PrintActivity extends Activity implements RemotePrintDocument.Updat
         PrintSpoolerService spooler = mSpoolerProvider.getSpooler();
 
         if (mState == STATE_INITIALIZING) {
-            if (isFinishing()) {
+            if (isFinishing() && spooler != null) {
                 spooler.setPrintJobState(mPrintJob.getId(), PrintJobInfo.STATE_CANCELED, null);
             }
             super.onPause();
@@ -650,6 +650,7 @@ public class PrintActivity extends Activity implements RemotePrintDocument.Updat
             }
         }
 
+        if (mCurrentPrinter == null) return;
         PrinterId printerId = mCurrentPrinter.getId();
         final int index = mDestinationSpinnerAdapter.getPrinterIndex(printerId);
         mDestinationSpinner.setSelection(index);
@@ -934,7 +935,7 @@ public class PrintActivity extends Activity implements RemotePrintDocument.Updat
         if (newFragment != null) {
             transaction.add(R.id.embedded_content_container, newFragment, FRAGMENT_TAG);
         }
-        transaction.commit();
+        transaction.commitAllowingStateLoss();
         getFragmentManager().executePendingTransactions();
     }
 

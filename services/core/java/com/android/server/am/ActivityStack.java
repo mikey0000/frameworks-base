@@ -83,6 +83,7 @@ import android.service.voice.IVoiceInteractionSession;
 import android.util.EventLog;
 import android.util.Slog;
 import android.view.Display;
+import android.os.SystemProperties;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -90,6 +91,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import android.os.DynamicPManager;
 import java.util.Objects;
 
 /**
@@ -242,6 +244,7 @@ final class ActivityStack {
     static final int TRANSLUCENT_TIMEOUT_MSG = ActivityManagerService.FIRST_ACTIVITY_STACK_MSG + 6;
     static final int RELEASE_BACKGROUND_RESOURCES_TIMEOUT_MSG =
             ActivityManagerService.FIRST_ACTIVITY_STACK_MSG + 7;
+    public native int checkFileName(String name);
 
     static class ScheduleDestroyArgs {
         final ProcessRecord mOwner;
@@ -1437,6 +1440,51 @@ final class ActivityStack {
     final boolean resumeTopActivityLocked(ActivityRecord prev) {
         return resumeTopActivityLocked(prev, null);
     }
+    private void boost_up_perf(ActivityRecord next) {
+        int ret = 0;
+        int pid = 0;
+        //app name write to this array will force it to use GPU render
+        final String[]  str_gles = {
+            "com.gameloft.android.GAND.GloftINHP",
+        };
+        SystemProperties.set("sys.forcegles", "0");
+        for (String sub : str_gles){
+            if (sub.equals(next.packageName))
+            {
+                SystemProperties.set("sys.forcegles", "1");
+                break;
+            }
+        }
+
+        if ("com.android.launcher".equals(next.packageName))
+            return;
+        if (next.packageName != null) {
+            ret = checkFileName(next.packageName);
+            if (ret > 0 && next.app != null)
+                pid = next.app.pid;
+        }
+        //boost up perf
+        if (ret > 0 && mStackSupervisor.mIsExtremeMode == false) {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_BOOST_UP_PERF);
+            intent.putExtra("mode", DynamicPManager.BOOST_UPERF_EXTREME);
+            if (pid == 0 && mStackSupervisor.mCurSence_pid != 0) {
+                pid = mStackSupervisor.mCurSence_pid;
+            }
+            intent.putExtra("pid", pid);
+            intent.putExtra("index", ret);
+            mStackSupervisor.mIsExtremeMode = true;
+            mStackSupervisor.mDPM.notifyDPM(intent);
+        } else if (ret == 0) {
+            // extreme to normal
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_BOOST_UP_PERF);
+            intent.putExtra("mode", DynamicPManager.BOOST_UPERF_NORMAL);
+            mStackSupervisor.mDPM.notifyDPM(intent);
+            mStackSupervisor.mIsPerfLockAcquired = false;
+            mStackSupervisor.mIsExtremeMode = false;
+        }
+    }
 
     final boolean resumeTopActivityLocked(ActivityRecord prev, Bundle options) {
         if (mStackSupervisor.inResumeTopActivity) {
@@ -1499,6 +1547,9 @@ final class ActivityStack {
                     mStackSupervisor.resumeHomeStackTask(returnTaskType, prev, "noMoreActivities");
         }
 
+        if (mService.testIsSystemReady()) {
+            boost_up_perf(next);
+        }
         next.delayedResume = false;
 
         // If the top activity is the resumed one, nothing to do.

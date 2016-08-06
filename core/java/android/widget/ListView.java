@@ -3105,7 +3105,7 @@ public class ListView extends AbsListView {
             View last = getChildAt(lastIndex);
 
             // bottom view may be panned off screen
-            while (last.getTop() > listBottom) {
+            while (last != null && last.getTop() > listBottom) {
                 AbsListView.LayoutParams layoutParams = (LayoutParams) last.getLayoutParams();
                 if (recycleBin.shouldRecycleViewType(layoutParams.viewType)) {
                     recycleBin.addScrapView(last, mFirstPosition+lastIndex);

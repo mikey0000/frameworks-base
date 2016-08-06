@@ -1536,6 +1536,7 @@ package android {
     field public static final int ic_lock_idle_low_battery = 17301536; // 0x1080020
     field public static final int ic_lock_lock = 17301551; // 0x108002f
     field public static final int ic_lock_power_off = 17301552; // 0x1080030
+    field public static final int ic_lock_reboot = 17301662; // 0x108009e
     field public static final int ic_lock_silent_mode = 17301553; // 0x1080031
     field public static final int ic_lock_silent_mode_off = 17301554; // 0x1080032
     field public static final int ic_media_ff = 17301537; // 0x1080021
@@ -3698,6 +3699,7 @@ package android.app {
     field public static final long INTERVAL_HALF_HOUR = 1800000L; // 0x1b7740L
     field public static final long INTERVAL_HOUR = 3600000L; // 0x36ee80L
     field public static final int RTC = 1; // 0x1
+    field public static final int RTC_SHUTDOWN_WAKEUP = 4; // 0x4
     field public static final int RTC_WAKEUP = 0; // 0x0
   }
 
@@ -7593,6 +7595,7 @@ package android.content {
     field public static final java.lang.String ACTION_BATTERY_CHANGED = "android.intent.action.BATTERY_CHANGED";
     field public static final java.lang.String ACTION_BATTERY_LOW = "android.intent.action.BATTERY_LOW";
     field public static final java.lang.String ACTION_BATTERY_OKAY = "android.intent.action.BATTERY_OKAY";
+    field public static final java.lang.String ACTION_BOOST_UP_PERF = "android.intent.action.BOOST_UP_PERF";
     field public static final java.lang.String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
     field public static final java.lang.String ACTION_BUG_REPORT = "android.intent.action.BUG_REPORT";
     field public static final java.lang.String ACTION_CALL = "android.intent.action.CALL";
@@ -13181,7 +13184,13 @@ package android.hardware.display {
     method public android.view.Display[] getDisplays();
     method public android.view.Display[] getDisplays(java.lang.String);
     method public void registerDisplayListener(android.hardware.display.DisplayManager.DisplayListener, android.os.Handler);
+    method public int setDisplay3DMode(int, int);
     method public void unregisterDisplayListener(android.hardware.display.DisplayManager.DisplayListener);
+    field public static final int DISPLAY_2D_LEFT = 1; // 0x1
+    field public static final int DISPLAY_2D_ORIGINAL = 0; // 0x0
+    field public static final int DISPLAY_2D_TOP = 2; // 0x2
+    field public static final int DISPLAY_3D_LEFT_RIGHT_HDMI = 3; // 0x3
+    field public static final int DISPLAY_3D_TOP_BOTTOM_HDMI = 4; // 0x4
     field public static final java.lang.String DISPLAY_CATEGORY_PRESENTATION = "android.hardware.display.category.PRESENTATION";
     field public static final int VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR = 16; // 0x10
     field public static final int VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY = 8; // 0x8
@@ -15148,19 +15157,30 @@ package android.media {
     method public static android.media.MediaPlayer create(android.content.Context, int);
     method public static android.media.MediaPlayer create(android.content.Context, int, android.media.AudioAttributes, int);
     method public void deselectTrack(int) throws java.lang.IllegalStateException;
+    method public void enableScaleMode(boolean, int, int);
     method public int getAudioSessionId();
+    method public boolean getBdFolderPlayMode();
+    method public int getChannelMuteMode();
     method public int getCurrentPosition();
     method public int getDuration();
+    method public static boolean getGlobalSubGate();
+    method public static int getMediaPlayerInfo(int, android.media.MediaPlayer.MediaPlayerInfo);
+    method public static int getMediaPlayerList();
+    method public int getPresentationScreen();
     method public int getSelectedTrack(int) throws java.lang.IllegalStateException;
+    method public java.lang.String getSubCharset();
+    method public int getSubDelay();
     method public android.media.MediaPlayer.TrackInfo[] getTrackInfo() throws java.lang.IllegalStateException;
     method public int getVideoHeight();
     method public int getVideoWidth();
     method public boolean isLooping();
     method public boolean isPlaying();
+    method public static boolean isRotatable();
     method public void pause() throws java.lang.IllegalStateException;
     method public void prepare() throws java.io.IOException, java.lang.IllegalStateException;
     method public void prepareAsync() throws java.lang.IllegalStateException;
     method public void release();
+    method public int releaseSurfaceByHand();
     method public void reset();
     method public void seekTo(int) throws java.lang.IllegalStateException;
     method public void selectTrack(int) throws java.lang.IllegalStateException;
@@ -15168,12 +15188,17 @@ package android.media {
     method public void setAudioSessionId(int) throws java.lang.IllegalArgumentException, java.lang.IllegalStateException;
     method public void setAudioStreamType(int);
     method public void setAuxEffectSendLevel(float);
+    method public int setBdFolderPlayMode(boolean);
+    method public int setChannelMuteMode(int);
     method public void setDataSource(android.content.Context, android.net.Uri) throws java.io.IOException, java.lang.IllegalArgumentException, java.lang.IllegalStateException, java.lang.SecurityException;
     method public void setDataSource(android.content.Context, android.net.Uri, java.util.Map<java.lang.String, java.lang.String>) throws java.io.IOException, java.lang.IllegalArgumentException, java.lang.IllegalStateException, java.lang.SecurityException;
     method public void setDataSource(java.lang.String) throws java.io.IOException, java.lang.IllegalArgumentException, java.lang.IllegalStateException, java.lang.SecurityException;
     method public void setDataSource(java.io.FileDescriptor) throws java.io.IOException, java.lang.IllegalArgumentException, java.lang.IllegalStateException;
     method public void setDataSource(java.io.FileDescriptor, long, long) throws java.io.IOException, java.lang.IllegalArgumentException, java.lang.IllegalStateException;
     method public void setDisplay(android.view.SurfaceHolder);
+    method public void setDlnaSourceDetector(android.media.MediaPlayer.DlnaSourceDetector);
+    method public static int setGlobalSubGate(boolean);
+    method public static int setHdmiState(boolean);
     method public void setLooping(boolean);
     method public void setNextMediaPlayer(android.media.MediaPlayer);
     method public void setOnBufferingUpdateListener(android.media.MediaPlayer.OnBufferingUpdateListener);
@@ -15184,13 +15209,109 @@ package android.media {
     method public void setOnSeekCompleteListener(android.media.MediaPlayer.OnSeekCompleteListener);
     method public void setOnTimedTextListener(android.media.MediaPlayer.OnTimedTextListener);
     method public void setOnVideoSizeChangedListener(android.media.MediaPlayer.OnVideoSizeChangedListener);
+    method public int setPresentationScreen(int);
+    method public static int setRotation(int);
     method public void setScreenOnWhilePlaying(boolean);
+    method public int setSubCharset(java.lang.String);
+    method public int setSubDelay(int);
     method public void setSurface(android.view.Surface);
     method public void setVideoScalingMode(int);
     method public void setVolume(float, float);
     method public void setWakeMode(android.content.Context, int);
     method public void start() throws java.lang.IllegalStateException;
     method public void stop() throws java.lang.IllegalStateException;
+    field public static final int ANAGLAGH_COLOR = 3; // 0x3
+    field public static final int ANAGLAGH_HALF_COLOR = 4; // 0x4
+    field public static final int ANAGLAGH_OPTIMIZED = 5; // 0x5
+    field public static final int ANAGLAGH_RED_BLUE = 0; // 0x0
+    field public static final int ANAGLAGH_RED_CYAN = 2; // 0x2
+    field public static final int ANAGLAGH_RED_GREEN = 1; // 0x1
+    field public static final int ANAGLAGH_YELLOW_BLUE = 6; // 0x6
+    field public static final int AUDIO_CHANNEL_MUTE_ALL = 3; // 0x3
+    field public static final int AUDIO_CHANNEL_MUTE_LEFT = 1; // 0x1
+    field public static final int AUDIO_CHANNEL_MUTE_NONE = 0; // 0x0
+    field public static final int AUDIO_CHANNEL_MUTE_RIGHT = 2; // 0x2
+    field public static final java.lang.String CHARSET_BIG5 = "Big5";
+    field public static final java.lang.String CHARSET_BIG5_HKSCS = "Big5-HKSCS";
+    field public static final java.lang.String CHARSET_BOCU_1 = "BOCU-1";
+    field public static final java.lang.String CHARSET_CESU_8 = "CESU-8";
+    field public static final java.lang.String CHARSET_CP864 = "cp864";
+    field public static final java.lang.String CHARSET_EUC_JP = "EUC-JP";
+    field public static final java.lang.String CHARSET_EUC_KR = "EUC-KR";
+    field public static final java.lang.String CHARSET_GB18030 = "GB18030";
+    field public static final java.lang.String CHARSET_GBK = "GBK";
+    field public static final java.lang.String CHARSET_HZ_GB_2312 = "HZ-GB-2312";
+    field public static final java.lang.String CHARSET_ISO_2022_CN = "ISO-2022-CN";
+    field public static final java.lang.String CHARSET_ISO_2022_CN_EXT = "ISO-2022-CN-EXT";
+    field public static final java.lang.String CHARSET_ISO_2022_JP = "ISO-2022-JP";
+    field public static final java.lang.String CHARSET_ISO_2022_KR = "ISO-2022-KR";
+    field public static final java.lang.String CHARSET_ISO_8859_1 = "ISO-8859-1";
+    field public static final java.lang.String CHARSET_ISO_8859_10 = "ISO-8859-10";
+    field public static final java.lang.String CHARSET_ISO_8859_13 = "ISO-8859-13";
+    field public static final java.lang.String CHARSET_ISO_8859_14 = "ISO-8859-14";
+    field public static final java.lang.String CHARSET_ISO_8859_15 = "ISO-8859-15";
+    field public static final java.lang.String CHARSET_ISO_8859_16 = "ISO-8859-16";
+    field public static final java.lang.String CHARSET_ISO_8859_2 = "ISO-8859-2";
+    field public static final java.lang.String CHARSET_ISO_8859_3 = "ISO-8859-3";
+    field public static final java.lang.String CHARSET_ISO_8859_4 = "ISO-8859-4";
+    field public static final java.lang.String CHARSET_ISO_8859_5 = "ISO-8859-5";
+    field public static final java.lang.String CHARSET_ISO_8859_6 = "ISO-8859-6";
+    field public static final java.lang.String CHARSET_ISO_8859_7 = "ISO-8859-7";
+    field public static final java.lang.String CHARSET_ISO_8859_8 = "ISO-8859-8";
+    field public static final java.lang.String CHARSET_ISO_8859_9 = "ISO-8859-9";
+    field public static final java.lang.String CHARSET_KOI8_R = "KOI8-R";
+    field public static final java.lang.String CHARSET_KOI8_U = "KOI8-U";
+    field public static final java.lang.String CHARSET_MACINTOSH = "macintosh";
+    field public static final java.lang.String CHARSET_SCSU = "SCSU";
+    field public static final java.lang.String CHARSET_SHIFT_JIS = "Shift_JIS";
+    field public static final java.lang.String CHARSET_TIS_620 = "TIS-620";
+    field public static final java.lang.String CHARSET_UNKNOWN = "UNKNOWN";
+    field public static final java.lang.String CHARSET_US_ASCII = "US-ASCII";
+    field public static final java.lang.String CHARSET_UTF_16 = "UTF-16";
+    field public static final java.lang.String CHARSET_UTF_16BE = "UTF-16BE";
+    field public static final java.lang.String CHARSET_UTF_16LE = "UTF-16LE";
+    field public static final java.lang.String CHARSET_UTF_32 = "UTF-32";
+    field public static final java.lang.String CHARSET_UTF_32BE = "UTF-32BE";
+    field public static final java.lang.String CHARSET_UTF_32LE = "UTF-32LE";
+    field public static final java.lang.String CHARSET_UTF_7 = "UTF-7";
+    field public static final java.lang.String CHARSET_UTF_8 = "UTF-8";
+    field public static final java.lang.String CHARSET_WINDOWS_1250 = "windows-1250";
+    field public static final java.lang.String CHARSET_WINDOWS_1251 = "windows-1251";
+    field public static final java.lang.String CHARSET_WINDOWS_1252 = "windows-1252";
+    field public static final java.lang.String CHARSET_WINDOWS_1253 = "windows-1253";
+    field public static final java.lang.String CHARSET_WINDOWS_1254 = "windows-1254";
+    field public static final java.lang.String CHARSET_WINDOWS_1255 = "windows-1255";
+    field public static final java.lang.String CHARSET_WINDOWS_1256 = "windows-1256";
+    field public static final java.lang.String CHARSET_WINDOWS_1257 = "windows-1257";
+    field public static final java.lang.String CHARSET_WINDOWS_1258 = "windows-1258";
+    field public static final java.lang.String CHARSET_X_DOCOMO_SHIFT_JIS_2007 = "x-docomo-shift_jis-2007";
+    field public static final java.lang.String CHARSET_X_GSM_03_38_2000 = "x-gsm-03.38-2000";
+    field public static final java.lang.String CHARSET_X_IBM_1383_P110_1999 = "x-ibm-1383_P110-1999";
+    field public static final java.lang.String CHARSET_X_IMAP_MAILBOX_NAME = "x-IMAP-mailbox-name";
+    field public static final java.lang.String CHARSET_X_ISCII_BE = "x-iscii-be";
+    field public static final java.lang.String CHARSET_X_ISCII_DE = "x-iscii-de";
+    field public static final java.lang.String CHARSET_X_ISCII_GU = "x-iscii-gu";
+    field public static final java.lang.String CHARSET_X_ISCII_KA = "x-iscii-ka";
+    field public static final java.lang.String CHARSET_X_ISCII_MA = "x-iscii-ma";
+    field public static final java.lang.String CHARSET_X_ISCII_OR = "x-iscii-or";
+    field public static final java.lang.String CHARSET_X_ISCII_PA = "x-iscii-pa";
+    field public static final java.lang.String CHARSET_X_ISCII_TA = "x-iscii-ta";
+    field public static final java.lang.String CHARSET_X_ISCII_TE = "x-iscii-te";
+    field public static final java.lang.String CHARSET_X_ISO_8859_11_2001 = "x-iso-8859_11-2001";
+    field public static final java.lang.String CHARSET_X_JAVAUNICODE = "x-JavaUnicode";
+    field public static final java.lang.String CHARSET_X_KDDI_SHIFT_JIS_2007 = "x-kddi-shift_jis-2007";
+    field public static final java.lang.String CHARSET_X_MAC_CYRILLIC = "x-mac-cyrillic";
+    field public static final java.lang.String CHARSET_X_SOFTBANK_SHIFT_JIS_2007 = "x-softbank-shift_jis-2007";
+    field public static final java.lang.String CHARSET_X_UNICODEBIG = "x-UnicodeBig";
+    field public static final java.lang.String CHARSET_X_UTF16_OPPOSITEENDIAN = "x-UTF16_OppositeEndian";
+    field public static final java.lang.String CHARSET_X_UTF16_PLATFORMENDIAN = "x-UTF16_PlatformEndian";
+    field public static final java.lang.String CHARSET_X_UTF32_OPPOSITEENDIAN = "x-UTF32_OppositeEndian";
+    field public static final java.lang.String CHARSET_X_UTF32_PLATFORMENDIAN = "x-UTF32_PlatformEndian";
+    field public static final java.lang.String CHARSET_X_UTF_16LE_BOM = "x-UTF-16LE-BOM";
+    field public static final int DISPLAY_3D_MODE_2D = 0; // 0x0
+    field public static final int DISPLAY_3D_MODE_3D = 1; // 0x1
+    field public static final int DISPLAY_3D_MODE_ANAGLAGH = 3; // 0x3
+    field public static final int DISPLAY_3D_MODE_HALF_PICTURE = 2; // 0x2
     field public static final int MEDIA_ERROR_IO = -1004; // 0xfffffc14
     field public static final int MEDIA_ERROR_MALFORMED = -1007; // 0xfffffc11
     field public static final int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200; // 0xc8
@@ -15208,9 +15329,57 @@ package android.media {
     field public static final int MEDIA_INFO_UNSUPPORTED_SUBTITLE = 901; // 0x385
     field public static final int MEDIA_INFO_VIDEO_RENDERING_START = 3; // 0x3
     field public static final int MEDIA_INFO_VIDEO_TRACK_LAGGING = 700; // 0x2bc
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_AQT = "text/aqt";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_ASC = "text/asc";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_ASS = "text/ass";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_CEA_608 = "text/cea-608";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_DKS = "text/dks";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_JS = "text/js";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_JSS = "text/jss";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_LRC = "text/lrc";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_MPL = "text/mpl";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_OVR = "text/ovr";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_PAN = "text/pan";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_PJS = "text/pjs";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_PSB = "text/psb";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_RT = "text/rt";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_RTF = "text/rtf";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_S2K = "text/s2k";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SBT = "text/sbt";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SCR = "text/scr";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SMI = "text/smi";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SON = "text/son";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SSA = "text/ssa";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SST = "text/sst";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SSTS = "text/ssts";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_STL = "text/stl";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SUB = "application/sub";
     field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SUBRIP = "application/x-subrip";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_TTS = "text/tts";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_TXT = "text/txt";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_VKT = "text/vkt";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_VSF = "text/vsf";
+    field public static final java.lang.String MEDIA_MIMETYPE_TEXT_ZEG = "text/zeg";
+    field public static final int PICTURE_3D_MODE_COLUME_INTERLEAVE = 5; // 0x5
+    field public static final int PICTURE_3D_MODE_DOUBLE_STREAM = 1; // 0x1
+    field public static final int PICTURE_3D_MODE_LINE_INTERLEAVE = 4; // 0x4
+    field public static final int PICTURE_3D_MODE_NONE = 0; // 0x0
+    field public static final int PICTURE_3D_MODE_SIDE_BY_SIDE = 2; // 0x2
+    field public static final int PICTURE_3D_MODE_TOP_TO_BOTTOM = 3; // 0x3
     field public static final int VIDEO_SCALING_MODE_SCALE_TO_FIT = 1; // 0x1
     field public static final int VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING = 2; // 0x2
+  }
+
+  public static abstract interface MediaPlayer.DlnaSourceDetector {
+    method public abstract void onSourceDetected(java.lang.String);
+  }
+
+  public static class MediaPlayer.MediaPlayerInfo {
+    ctor public MediaPlayer.MediaPlayerInfo();
+    field public int codecType;
+    field public int height;
+    field public int playState;
+    field public int width;
   }
 
   public static abstract interface MediaPlayer.OnBufferingUpdateListener {
@@ -15698,8 +15867,46 @@ package android.media {
   }
 
   public final class TimedText {
+    method public android.graphics.Bitmap AWExtend_getBitmap();
+    method public int AWExtend_getBitmapSubtitleFlag();
+    method public int AWExtend_getHideSubFlag();
+    method public java.util.List<android.media.TimedText.Style> AWExtend_getStyleList();
+    method public int AWExtend_getSubDispPos();
+    method public int AWExtend_getSubtitleID();
+    method public android.graphics.Rect AWExtend_getTextScreenBounds();
     method public android.graphics.Rect getBounds();
     method public java.lang.String getText();
+    field public static final int SUB_DISPPOS_BOT_LEFT = 49; // 0x31
+    field public static final int SUB_DISPPOS_BOT_MID = 50; // 0x32
+    field public static final int SUB_DISPPOS_BOT_RIGHT = 51; // 0x33
+    field public static final int SUB_DISPPOS_DEFAULT = 0; // 0x0
+    field public static final int SUB_DISPPOS_MID_LEFT = 33; // 0x21
+    field public static final int SUB_DISPPOS_MID_MID = 34; // 0x22
+    field public static final int SUB_DISPPOS_MID_RIGHT = 35; // 0x23
+    field public static final int SUB_DISPPOS_TOP_LEFT = 17; // 0x11
+    field public static final int SUB_DISPPOS_TOP_MID = 18; // 0x12
+    field public static final int SUB_DISPPOS_TOP_RIGHT = 19; // 0x13
+    field public static final int SUB_RENDER_ALIGN_NONE = 0; // 0x0
+    field public static final int SUB_RENDER_HALIGN_CENTER = 2; // 0x2
+    field public static final int SUB_RENDER_HALIGN_LEFT = 1; // 0x1
+    field public static final int SUB_RENDER_HALIGN_RIGHT = 3; // 0x3
+    field public static final int SUB_RENDER_VALIGN_BOTTOM = 48; // 0x30
+    field public static final int SUB_RENDER_VALIGN_CENTER = 32; // 0x20
+    field public static final int SUB_RENDER_VALIGN_TOP = 16; // 0x10
+    field public static final int SUN_RENDER_HALIGN_MASK = 15; // 0xf
+    field public static final int SUN_RENDER_VALIGN_MASK = 240; // 0xf0
+  }
+
+  public static final class TimedText.Style {
+    ctor public TimedText.Style(int, int, int, boolean, boolean, boolean, int, int);
+    field public final int colorRGBA;
+    field public final int endChar;
+    field public final int fontID;
+    field public final int fontSize;
+    field public final boolean isBold;
+    field public final boolean isItalic;
+    field public final boolean isUnderlined;
+    field public final int startChar;
   }
 
   public class ToneGenerator {
@@ -21708,6 +21915,23 @@ package android.os {
     field public static final android.os.Parcelable.Creator<android.os.DropBoxManager.Entry> CREATOR;
   }
 
+  public class DynamicPManager {
+    method public static android.os.DynamicPManager getInstance();
+    method public void notifyDPM(android.content.Intent);
+    field public static final java.lang.String BOOST_UPERF_4KLOCALVIDEO = "mode_4klocalvideo";
+    field public static final java.lang.String BOOST_UPERF_BGMUSIC = "mode_bgmusic_enter";
+    field public static final java.lang.String BOOST_UPERF_EXTREME = "mode_extreme";
+    field public static final java.lang.String BOOST_UPERF_HOMENTER = "mode_home_enter";
+    field public static final java.lang.String BOOST_UPERF_HOMEXIT = "mode_home_exit";
+    field public static final java.lang.String BOOST_UPERF_LOCALVIDEO = "mode_localvideo";
+    field public static final java.lang.String BOOST_UPERF_NORMAL = "mode_normal";
+    field public static final java.lang.String BOOST_UPERF_ROTATENTER = "mode_rotation_enter";
+    field public static final java.lang.String BOOST_UPERF_ROTATEXIT = "mode_rotation_exit";
+    field public static final java.lang.String BOOST_UPERF_USBENTER = "mode_usb_enter";
+    field public static final java.lang.String BOOST_UPERF_USBEXIT = "mode_usb_exit";
+    field public static final java.lang.String DPM_SERVICE = "DynamicPManager";
+  }
+
   public class Environment {
     ctor public Environment();
     method public static java.io.File getDataDirectory();
@@ -24889,6 +25113,9 @@ package android.provider {
     field public static final java.lang.String INTENT_ACTION_VIDEO_PLAY_FROM_SEARCH = "android.media.action.VIDEO_PLAY_FROM_SEARCH";
     field public static final java.lang.String MEDIA_IGNORE_FILENAME = ".nomedia";
     field public static final java.lang.String MEDIA_SCANNER_VOLUME = "volume";
+    field public static final java.lang.String PLAYLIST_TYPE = "android.intent.extra.playListType";
+    field public static final java.lang.String PLAYLIST_TYPE_CUR_FOLDER = "curFolder";
+    field public static final java.lang.String PLAYLIST_TYPE_MEDIA_PROVIDER = "mediaProvider";
     field public static final java.lang.String UNKNOWN_STRING = "<unknown>";
   }
 
@@ -25426,6 +25653,8 @@ package android.provider {
     field public static final java.lang.String BLUETOOTH_DISCOVERABILITY = "bluetooth_discoverability";
     field public static final java.lang.String BLUETOOTH_DISCOVERABILITY_TIMEOUT = "bluetooth_discoverability_timeout";
     field public static final deprecated java.lang.String BLUETOOTH_ON = "bluetooth_on";
+    field public static final java.lang.String BRIGHTNESS_LIGHT_MODE = "brightness_light_mode";
+    field public static final java.lang.String BRIGHT_SYSTEM_MODE = "bright_system_mode";
     field public static final android.net.Uri CONTENT_URI;
     field public static final deprecated java.lang.String DATA_ROAMING = "data_roaming";
     field public static final java.lang.String DATE_FORMAT = "date_format";
@@ -25438,9 +25667,15 @@ package android.provider {
     field public static final java.lang.String DTMF_TONE_WHEN_DIALING = "dtmf_tone";
     field public static final java.lang.String END_BUTTON_BEHAVIOR = "end_button_behavior";
     field public static final java.lang.String FONT_SCALE = "font_scale";
+    field public static final java.lang.String GESTURE_SCREENRECORD_ENABLE = "gesture_screenrecord_enable";
+    field public static final java.lang.String GESTURE_SCREENSHOT_ENABLE = "gesture_screenshot_enable";
     field public static final java.lang.String HAPTIC_FEEDBACK_ENABLED = "haptic_feedback_enabled";
+    field public static final java.lang.String HDMI_FULL_SCREEN = "hdmi_full_screen";
+    field public static final java.lang.String HDMI_OUTPUT_MODE = "hdmi_output_mode";
+    field public static final java.lang.String HDMI_PERSENT = "hdmi_persent";
     field public static final deprecated java.lang.String HTTP_PROXY = "http_proxy";
     field public static final deprecated java.lang.String INSTALL_NON_MARKET_APPS = "install_non_market_apps";
+    field public static final java.lang.String KILL_BACKGROUND_SERVICES = "kill_background_services";
     field public static final deprecated java.lang.String LOCATION_PROVIDERS_ALLOWED = "location_providers_allowed";
     field public static final deprecated java.lang.String LOCK_PATTERN_ENABLED = "lock_pattern_autolock";
     field public static final deprecated java.lang.String LOCK_PATTERN_TACTILE_FEEDBACK_ENABLED = "lock_pattern_tactile_feedback_enabled";
@@ -25448,6 +25683,7 @@ package android.provider {
     field public static final deprecated java.lang.String LOGGING_ID = "logging_id";
     field public static final deprecated java.lang.String MODE_RINGER = "mode_ringer";
     field public static final java.lang.String MODE_RINGER_STREAMS_AFFECTED = "mode_ringer_streams_affected";
+    field public static final java.lang.String MOUSE_ADVANCE = "mouse_advance";
     field public static final java.lang.String MUTE_STREAMS_AFFECTED = "mute_streams_affected";
     field public static final deprecated java.lang.String NETWORK_PREFERENCE = "network_preference";
     field public static final deprecated java.lang.String NEXT_ALARM_FORMATTED = "next_alarm_formatted";
@@ -32466,9 +32702,11 @@ package android.view {
     field public static final int KEYCODE_ALT_LEFT = 57; // 0x39
     field public static final int KEYCODE_ALT_RIGHT = 58; // 0x3a
     field public static final int KEYCODE_APOSTROPHE = 75; // 0x4b
+    field public static final int KEYCODE_APPS = 10011; // 0x271b
     field public static final int KEYCODE_APP_SWITCH = 187; // 0xbb
     field public static final int KEYCODE_ASSIST = 219; // 0xdb
     field public static final int KEYCODE_AT = 77; // 0x4d
+    field public static final int KEYCODE_AUDIO = 10003; // 0x2713
     field public static final int KEYCODE_AVR_INPUT = 182; // 0xb6
     field public static final int KEYCODE_AVR_POWER = 181; // 0xb5
     field public static final int KEYCODE_B = 30; // 0x1e
@@ -32478,6 +32716,7 @@ package android.view {
     field public static final int KEYCODE_BREAK = 121; // 0x79
     field public static final int KEYCODE_BRIGHTNESS_DOWN = 220; // 0xdc
     field public static final int KEYCODE_BRIGHTNESS_UP = 221; // 0xdd
+    field public static final int KEYCODE_BROWSER = 10012; // 0x271c
     field public static final int KEYCODE_BUTTON_1 = 188; // 0xbc
     field public static final int KEYCODE_BUTTON_10 = 197; // 0xc5
     field public static final int KEYCODE_BUTTON_11 = 198; // 0xc6
@@ -32538,6 +32777,7 @@ package android.view {
     field public static final int KEYCODE_ENVELOPE = 65; // 0x41
     field public static final int KEYCODE_EQUALS = 70; // 0x46
     field public static final int KEYCODE_ESCAPE = 111; // 0x6f
+    field public static final int KEYCODE_EXPAND = 10008; // 0x2718
     field public static final int KEYCODE_EXPLORER = 64; // 0x40
     field public static final int KEYCODE_F = 34; // 0x22
     field public static final int KEYCODE_F1 = 131; // 0x83
@@ -32552,11 +32792,13 @@ package android.view {
     field public static final int KEYCODE_F7 = 137; // 0x89
     field public static final int KEYCODE_F8 = 138; // 0x8a
     field public static final int KEYCODE_F9 = 139; // 0x8b
+    field public static final int KEYCODE_FAVOURITE = 10006; // 0x2716
     field public static final int KEYCODE_FOCUS = 80; // 0x50
     field public static final int KEYCODE_FORWARD = 125; // 0x7d
     field public static final int KEYCODE_FORWARD_DEL = 112; // 0x70
     field public static final int KEYCODE_FUNCTION = 119; // 0x77
     field public static final int KEYCODE_G = 35; // 0x23
+    field public static final int KEYCODE_GOTO = 10001; // 0x2711
     field public static final int KEYCODE_GRAVE = 68; // 0x44
     field public static final int KEYCODE_GUIDE = 172; // 0xac
     field public static final int KEYCODE_H = 36; // 0x24
@@ -32571,10 +32813,13 @@ package android.view {
     field public static final int KEYCODE_K = 39; // 0x27
     field public static final int KEYCODE_KANA = 218; // 0xda
     field public static final int KEYCODE_KATAKANA_HIRAGANA = 215; // 0xd7
+    field public static final int KEYCODE_KOUT_VOLUME_DOWN = 373; // 0x175
+    field public static final int KEYCODE_KOUT_VOLUME_UP = 372; // 0x174
     field public static final int KEYCODE_L = 40; // 0x28
     field public static final int KEYCODE_LANGUAGE_SWITCH = 204; // 0xcc
     field public static final int KEYCODE_LAST_CHANNEL = 229; // 0xe5
     field public static final int KEYCODE_LEFT_BRACKET = 71; // 0x47
+    field public static final int KEYCODE_LOOP = 10007; // 0x2717
     field public static final int KEYCODE_M = 41; // 0x29
     field public static final int KEYCODE_MANNER_MODE = 205; // 0xcd
     field public static final int KEYCODE_MEDIA_AUDIO_TRACK = 222; // 0xde
@@ -32593,9 +32838,13 @@ package android.view {
     field public static final int KEYCODE_MENU = 82; // 0x52
     field public static final int KEYCODE_META_LEFT = 117; // 0x75
     field public static final int KEYCODE_META_RIGHT = 118; // 0x76
+    field public static final int KEYCODE_MIC_VOLUME_DOWN = 371; // 0x173
+    field public static final int KEYCODE_MIC_VOLUME_UP = 370; // 0x172
     field public static final int KEYCODE_MINUS = 69; // 0x45
+    field public static final int KEYCODE_MOUSE = 10009; // 0x2719
     field public static final int KEYCODE_MOVE_END = 123; // 0x7b
     field public static final int KEYCODE_MOVE_HOME = 122; // 0x7a
+    field public static final int KEYCODE_MOVIE = 10010; // 0x271a
     field public static final int KEYCODE_MUHENKAN = 213; // 0xd5
     field public static final int KEYCODE_MUSIC = 209; // 0xd1
     field public static final int KEYCODE_MUTE = 91; // 0x5b
@@ -32642,6 +32891,7 @@ package android.view {
     field public static final int KEYCODE_RIGHT_BRACKET = 72; // 0x48
     field public static final int KEYCODE_RO = 217; // 0xd9
     field public static final int KEYCODE_S = 47; // 0x2f
+    field public static final int KEYCODE_SCREENSHOT = 10013; // 0x271d
     field public static final int KEYCODE_SCROLL_LOCK = 116; // 0x74
     field public static final int KEYCODE_SEARCH = 84; // 0x54
     field public static final int KEYCODE_SEMICOLON = 74; // 0x4a
@@ -32656,6 +32906,7 @@ package android.view {
     field public static final int KEYCODE_STAR = 17; // 0x11
     field public static final int KEYCODE_STB_INPUT = 180; // 0xb4
     field public static final int KEYCODE_STB_POWER = 179; // 0xb3
+    field public static final int KEYCODE_SUBTITLE = 10002; // 0x2712
     field public static final int KEYCODE_SWITCH_CHARSET = 95; // 0x5f
     field public static final int KEYCODE_SYM = 63; // 0x3f
     field public static final int KEYCODE_SYSRQ = 120; // 0x78
@@ -32687,6 +32938,7 @@ package android.view {
     field public static final int KEYCODE_TV_SATELLITE_BS = 238; // 0xee
     field public static final int KEYCODE_TV_SATELLITE_CS = 239; // 0xef
     field public static final int KEYCODE_TV_SATELLITE_SERVICE = 240; // 0xf0
+    field public static final int KEYCODE_TV_SYSTEM = 10000; // 0x2710
     field public static final int KEYCODE_TV_TELETEXT = 233; // 0xe9
     field public static final int KEYCODE_TV_TERRESTRIAL_ANALOG = 235; // 0xeb
     field public static final int KEYCODE_TV_TERRESTRIAL_DIGITAL = 236; // 0xec
@@ -32707,6 +32959,7 @@ package android.view {
     field public static final int KEYCODE_YEN = 216; // 0xd8
     field public static final int KEYCODE_Z = 54; // 0x36
     field public static final int KEYCODE_ZENKAKU_HANKAKU = 211; // 0xd3
+    field public static final int KEYCODE_ZOOM = 10004; // 0x2714
     field public static final int KEYCODE_ZOOM_IN = 168; // 0xa8
     field public static final int KEYCODE_ZOOM_OUT = 169; // 0xa9
     field public static final deprecated int MAX_KEYCODE = 84; // 0x54
@@ -33851,6 +34104,7 @@ package android.view {
     field public static final int SOUND_EFFECTS_ENABLED = 134217728; // 0x8000000
     field public static final deprecated int STATUS_BAR_HIDDEN = 1; // 0x1
     field public static final deprecated int STATUS_BAR_VISIBLE = 0; // 0x0
+    field public static final int SYSTEM_UI_FLAG_ALWAYS = 8192; // 0x2000
     field public static final int SYSTEM_UI_FLAG_FULLSCREEN = 4; // 0x4
     field public static final int SYSTEM_UI_FLAG_HIDE_NAVIGATION = 2; // 0x2
     field public static final int SYSTEM_UI_FLAG_IMMERSIVE = 2048; // 0x800

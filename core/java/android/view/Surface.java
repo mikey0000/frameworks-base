@@ -24,6 +24,7 @@ import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.IBinder;
 import android.util.Log;
 
 import java.lang.annotation.Retention;
@@ -55,6 +56,9 @@ public class Surface implements Parcelable {
 
     private static native int nativeGetWidth(long nativeObject);
     private static native int nativeGetHeight(long nativeObject);
+	/* add by allwinner */
+	private static native int nativeSetDisplayParameter(
+            int displayId, int cmd, int para0, int para1, int para2);
 
     public static final Parcelable.Creator<Surface> CREATOR =
             new Parcelable.Creator<Surface>() {
@@ -615,4 +619,10 @@ public class Surface implements Parcelable {
     private static native void nHwuiSetSurface(long renderer, long surface);
     private static native void nHwuiDraw(long renderer);
     private static native void nHwuiDestroy(long renderer);
+	
+	/* add by allwinner */
+	/** @hide */
+    public static int setDisplayParameter(int displayId, int cmd, int para0, int para1, int para2) {
+        return nativeSetDisplayParameter(displayId, cmd, para0, para1, para2);
+    }
 }

@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.AudioService;
 import android.media.tv.TvInputManager;
+import android.os.DynamicPManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.FactoryTest;
@@ -167,6 +168,9 @@ public final class SystemServer {
      * The main entry point from zygote.
      */
     public static void main(String[] args) {
+        if (SystemProperties.getBoolean("persist.sys.boot.first", true)) {
+            SystemProperties.set("persist.sys.boot.first", "0");
+        }
         new SystemServer().run();
     }
 
@@ -236,7 +240,12 @@ public final class SystemServer {
 
         // Initialize native services.
         System.loadLibrary("android_servers");
-        nativeInit();
+        new Thread() {
+            @Override
+            public void run() {
+                nativeInit();
+            }
+        }.start();
 
         // Check whether we failed to shut down last time we tried.
         // This call may not return.
@@ -359,6 +368,8 @@ public final class SystemServer {
 
         // Set up the Application instance for the system process and get started.
         mActivityManagerService.setSystemProcess();
+
+        SystemProperties.set("sys.bootstrap_service_started", "1");
     }
 
     /**
@@ -390,6 +401,7 @@ public final class SystemServer {
         final Context context = mSystemContext;
         AccountManagerService accountManager = null;
         ContentService contentService = null;
+        DynamicPManagerService dpm = null;
         VibratorService vibrator = null;
         IAlarmManager alarm = null;
         MountService mountService = null;
@@ -457,6 +469,8 @@ public final class SystemServer {
             Slog.i(TAG, "System Content Providers");
             mActivityManagerService.installSystemProviders();
 
+            dpm = new DynamicPManagerService(context);
+            ServiceManager.addService(DynamicPManager.DPM_SERVICE, dpm);
             Slog.i(TAG, "Vibrator Service");
             vibrator = new VibratorService(context);
             ServiceManager.addService("vibrator", vibrator);
@@ -1034,6 +1048,11 @@ public final class SystemServer {
             reportWtf("making Display Manager Service ready", e);
         }
 
+               try {
+                       if(dpm != null) dpm.systemReady();
+               }catch (Throwable e){
+                       reportWtf("making DynamicPower Service ready", e);
+               }
         // These are needed to propagate to the runnable below.
         final MountService mountServiceF = mountService;
         final NetworkManagementService networkManagementF = networkManagement;

@@ -311,7 +311,7 @@ public class DropBoxManager {
      * @return whether events with that tag would be accepted
      */
     public boolean isTagEnabled(String tag) {
-        try { return mService.isTagEnabled(tag); } catch (RemoteException e) { return false; }
+        try { return (mService.isTagEnabled(tag) && SystemProperties.getBoolean("sys.crash_log.enable", false)); } catch (RemoteException e) { return false; }
     }
 
     /**

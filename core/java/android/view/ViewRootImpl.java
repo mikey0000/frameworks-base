@@ -698,8 +698,51 @@ public final class ViewRootImpl implements ViewParent,
         if (mTranslator != null) return;
 
         // Try to enable hardware acceleration if requested
-        final boolean hardwareAccelerated =
+        boolean hardwareAccelerated =
                 (attrs.flags & WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED) != 0;
+
+		if (hardwareAccelerated == false) {
+			if(SystemProperties.getBoolean("ro.hwa.force", false)) {  //for debug only, DONOT set this property!!!!!
+				hardwareAccelerated = true;
+			}
+			else {
+				int index;
+				String pn;
+				String[] packages = new String[] {	//package lists that need to ENABLE hw acceleration, use carefully!!!!!
+					"org.cocos2dx.FishingJoy2"
+				};
+
+				pn = mView.getContext().getPackageName();
+				for (int i = 0; i < packages.length; i++) {
+					index = pn.indexOf(packages[i]);
+					if (index != -1) {
+						hardwareAccelerated = true;
+						break;
+					}
+				}
+			}
+			if (hardwareAccelerated) {
+				Slog.i(TAG, "####" + mView.getContext().getPackageName() + " Force Enable Hardware Accelerate");
+			}
+		}
+		else{
+			int index;
+			String pn;
+			String[] packages = new String[] {	//package lists that need to DISABLE hw acceleration, use carefully!!!!!
+			};
+
+			pn = mView.getContext().getPackageName();
+			for (int i = 0; i < packages.length; i++) {
+				index = pn.indexOf(packages[i]);
+				if (index != -1) {
+					hardwareAccelerated = false;
+					break;
+				}
+			}
+			if (hardwareAccelerated == false) {
+				Slog.i(TAG, "####" + mView.getContext().getPackageName() + " Force Disable Hardware Accelerate");
+			}
+		}
 
         if (hardwareAccelerated) {
             if (!HardwareRenderer.isAvailable()) {

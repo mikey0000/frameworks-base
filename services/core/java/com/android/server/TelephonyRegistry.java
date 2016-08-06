@@ -493,6 +493,7 @@ class TelephonyRegistry extends ITelephonyRegistry.Stub {
                     log("listen:  Register r=" + r + " r.subId=" + r.subId + " phoneId=" + phoneId);
                 }
                 if (VDBG) toStringLogSSC("listen");
+				
                 if (notifyNow && validatePhoneId(phoneId)) {
                     if ((events & PhoneStateListener.LISTEN_SERVICE_STATE) != 0) {
                         try {

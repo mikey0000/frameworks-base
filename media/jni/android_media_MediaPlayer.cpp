@@ -57,6 +57,11 @@ struct fields_t {
     jfieldID    context;
     jfieldID    surface_texture;
 
+	jfieldID    width;
+	jfieldID	height;
+	jfieldID    codecType;
+	jfieldID    playState;
+
     jmethodID   post_event;
 
     jmethodID   proxyConfigGetHost;
@@ -637,6 +642,260 @@ android_media_MediaPlayer_getMetadata(JNIEnv *env, jobject thiz, jboolean update
         return JNI_FALSE;
     }
 }
+static jint
+android_media_MediaPlayer_setSubCharset(JNIEnv *env, jobject thiz, jstring charset)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    
+    const char *ccharset = env->GetStringUTFChars(charset, NULL);
+    if(ccharset == NULL){
+        ALOGE("Fail in converting jstring to cstring.");
+        return -1;
+    }
+    
+    status_t ret = mp->setSubCharset(ccharset);
+    env->ReleaseStringUTFChars(charset, ccharset);
+    return ret;
+}
+
+static jstring
+android_media_MediaPlayer_getSubCharset(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return NULL;
+    }
+    char *ccharset = new char[MEDIAPLAYER_NAME_LEN_MAX];
+    if(ccharset == NULL){
+        ALOGE("Fail in allocating memory.");
+        return NULL;
+    }
+    
+    status_t ret = mp->getSubCharset(ccharset);
+    if(ret == OK){
+        jstring charset = env->NewStringUTF(ccharset);
+        if(charset == NULL){
+            ALOGE("Fail in creating java string with %s.", ccharset);
+        }
+        delete[] ccharset;
+        return charset;
+    }else {
+        delete[] ccharset;
+        return NULL;
+    }
+}
+static jint
+android_media_MediaPlayer_setSubDelay(JNIEnv *env, jobject thiz, jint delay)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    
+    return mp->setSubDelay(delay);
+}
+
+static jint
+android_media_MediaPlayer_getSubDelay(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    
+    return mp->getSubDelay();
+}
+/* add by Gary. end   -----------------------------------}} */
+
+/* add by Gary. start {{----------------------------------- */
+/* 2011-11-14 */
+/* support scale mode */
+static void
+android_media_MediaPlayer_enableScaleMode(JNIEnv *env, jobject thiz, jboolean enable, jint width, jint height)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return;
+    }
+    
+    mp->enableScaleMode((bool)enable, width, height);
+}
+/* add by Gary. end   -----------------------------------}} */
+
+/* add by Gary. start {{----------------------------------- */
+/* add by Gary. start {{----------------------------------- */
+/* 2012-03-07 */
+/* set audio channel mute */
+static jint
+android_media_MediaPlayer_setChannelMuteMode(JNIEnv *env, jobject thiz, jint muteMode)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    
+    return mp->setChannelMuteMode(muteMode);
+}
+
+static jint
+android_media_MediaPlayer_getChannelMuteMode(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    
+    return mp->getChannelMuteMode();
+}
+/* add by Gary. end   -----------------------------------}} */
+
+/* add by Gary. start {{----------------------------------- */
+/* 2012-03-12 */
+/* add the global interfaces to control the subtitle gate  */
+static jint 
+android_media_MediaPlayer_setGlobalSubGate(JNIEnv *env, jobject thiz, jboolean showSub)
+{
+    if(OK == MediaPlayer::setGlobalSubGate(showSub))
+        return 0;
+    else
+        return -1;
+}
+
+static jboolean 
+android_media_MediaPlayer_getGlobalSubGate(JNIEnv *env, jobject thiz)
+{
+    return MediaPlayer::getGlobalSubGate();
+}
+/* add by Gary. end   -----------------------------------}} */
+
+/* add by Gary. start {{----------------------------------- */
+/* 2012-4-24 */
+/* add two general interfaces for expansibility */
+static jint
+android_media_MediaPlayer_setBdFolderPlayMode(JNIEnv *env, jobject thiz, jboolean enable)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+    int input = enable? 1 : 0;
+    return mp->generalInterface(MEDIAPLAYER_CMD_SET_BD_FOLDER_PLAY_MODE, input, 0, 0, NULL);
+}
+
+static jboolean
+android_media_MediaPlayer_getBdFolderPlayMode(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return false;
+    }
+    
+    int enable = 0;
+    mp->generalInterface(MEDIAPLAYER_CMD_GET_BD_FOLDER_PLAY_MODE, 0, 0, 0, &enable);
+    return enable == 1;
+}
+/* add by Gary. end   -----------------------------------}} */
+
+/* add by lys. start {{----------------------------------- */
+/* 2013-4-22 */
+/* add two general interfaces for expansibility */
+
+static jint
+android_media_MediaPlayer_releaseSurfaceByHand(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+
+    return mp->generalInterface(MEDIAPLAYER_CMD_RELEASE_SURFACE_BYHAND, 0, 0, 0, NULL);
+}
+
+static jint
+android_media_MediaPlayer_setPresentationScreen(JNIEnv *env, jobject thiz, jint screen)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return -1;
+    }
+
+    return mp->generalInterface(MEDIAPLAYER_CMD_SET_PRESENTANTION_SCREEN, screen, 0, 0, NULL);
+}
+
+static jint
+android_media_MediaPlayer_getPresentationScreen(JNIEnv *env, jobject thiz)
+{
+    sp<MediaPlayer> mp = getMediaPlayer(env, thiz);
+    if (mp == NULL ) {
+        jniThrowException(env, "java/lang/IllegalStateException", NULL);
+        return false;
+    }
+    
+    int screen = 0;
+    mp->generalInterface(MEDIAPLAYER_CMD_GET_PRESENTANTION_SCREEN, 0, 0, 0, &screen);
+    return screen;
+}
+/* add by lys. end   -----------------------------------}} */
+
+/*Start by Bevis. Rotate the video.*/
+static jboolean
+android_media_MediaPlayer_isRotatable(JNIEnv *env, jobject thiz)
+{
+    int enable = 0;
+    MediaPlayer::generalGlobalInterface(MEDIAPLAYER_CMD_IS_ROTATABLE, 0, 0, 0, &enable);
+    return enable == 1;
+}
+
+static jint
+android_media_MediaPlayer_setRotation(JNIEnv *env, jobject thiz, jint rotation)
+{
+    return MediaPlayer::generalGlobalInterface(MEDIAPLAYER_CMD_SET_ROTATION, rotation, 0, 0, NULL);
+}
+/*End by Bevis. Rotate the video.*/
+
+static jint android_media_MediaPlayer_getMediaPlayerList(JNIEnv *env, jobject thiz)
+{
+    return MediaPlayer::getMediaPlayerList();
+}
+
+static jint android_media_MediaPlayer_getMediaPlayerInfo(JNIEnv *env, jobject thiz,
+    jint mediaPlayerId, jobject info_obj)
+{
+    MediaPlayerInfo mediaPlayerInfo;
+    status_t rc = MediaPlayer::getMediaPlayerInfo(mediaPlayerId, &mediaPlayerInfo);
+    if (rc != NO_ERROR) {
+        jniThrowRuntimeException(env, "Fail to get mediaPlayer info");
+        return UNKNOWN_ERROR;
+    }
+	
+    env->SetIntField(info_obj, fields.width, mediaPlayerInfo.width);
+    env->SetIntField(info_obj, fields.height, mediaPlayerInfo.height);
+	env->SetIntField(info_obj, fields.codecType, mediaPlayerInfo.codecType);
+    env->SetIntField(info_obj, fields.playState, mediaPlayerInfo.playState);
+	return NO_ERROR;
+}
+
+/*add by eric_wang. Notify hdmi status.*/
+static jint
+android_media_MediaPlayer_setHdmiState(JNIEnv *env, jobject thiz, jboolean bHdmiPlugged)
+{
+    return MediaPlayer::generalGlobalInterface(MEDIAPLAYER_CMD_SET_HDMISTATE, bHdmiPlugged, 0, 0, NULL);
+}
+/*End by eric_wang. Notify hdmi status.*/
 
 // This function gets some field IDs, which in turn causes class initialization.
 // It is called from a static block in MediaPlayer, which won't run until the
@@ -893,13 +1152,91 @@ static JNINativeMethod gMethods[] = {
     {"native_pullBatteryData", "(Landroid/os/Parcel;)I",        (void *)android_media_MediaPlayer_pullBatteryData},
     {"native_setRetransmitEndpoint", "(Ljava/lang/String;I)I",  (void *)android_media_MediaPlayer_setRetransmitEndpoint},
     {"setNextMediaPlayer",  "(Landroid/media/MediaPlayer;)V",   (void *)android_media_MediaPlayer_setNextMediaPlayer},
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-9-13 10:25:47 */
+    /* expend interfaces about subtitle, track and so on */
+    {"setSubCharset",          "(Ljava/lang/String;)I",         (void *)android_media_MediaPlayer_setSubCharset},
+    {"getSubCharset",          "()Ljava/lang/String;",          (void *)android_media_MediaPlayer_getSubCharset},
+    {"setSubDelay",            "(I)I",                          (void *)android_media_MediaPlayer_setSubDelay},
+    {"getSubDelay",            "()I",                           (void *)android_media_MediaPlayer_getSubDelay},
+    /* add by Gary. end   -----------------------------------}} */
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-11-14 */
+    /* support scale mode */
+    {"enableScaleMode",        "(ZII)V",                        (void *)android_media_MediaPlayer_enableScaleMode},
+    /* add by Gary. end   -----------------------------------}} */
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-03-07 */
+    /* set audio channel mute */
+    {"setChannelMuteMode",     "(I)I",                          (void *)android_media_MediaPlayer_setChannelMuteMode},
+    {"getChannelMuteMode",     "()I",                           (void *)android_media_MediaPlayer_getChannelMuteMode},
+    /* add by Gary. end   -----------------------------------}} */
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-03-12 */
+    /* add the global interfaces to control the subtitle gate  */
+    {"getGlobalSubGate",        "()Z",                          (void *)android_media_MediaPlayer_getGlobalSubGate},
+    {"setGlobalSubGate",        "(Z)I",                         (void *)android_media_MediaPlayer_setGlobalSubGate},
+    /* add by Gary. end   -----------------------------------}} */
+    {"getBdFolderPlayMode",     "()Z",                          (void *)android_media_MediaPlayer_getBdFolderPlayMode},
+    {"setBdFolderPlayMode",     "(Z)I",                         (void *)android_media_MediaPlayer_setBdFolderPlayMode},
+    {"getPresentationScreen",     "()I",                          (void *)android_media_MediaPlayer_getPresentationScreen},
+    {"setPresentationScreen",     "(I)I",                         (void *)android_media_MediaPlayer_setPresentationScreen},
+    {"releaseSurfaceByHand",     "()I",                         (void *)android_media_MediaPlayer_releaseSurfaceByHand},
+    /*Start by Bevis. Rotate the video*/
+	{"isRotatable",     "()Z",                         		    (void *)android_media_MediaPlayer_isRotatable},	
+    {"setRotation",     "(I)I",                         		(void *)android_media_MediaPlayer_setRotation},
+    /*End by Bevis. Rotate the video*/
+    /*add by eric_wang. Notify hdmi status.*/
+    {"setHdmiState",     "(Z)I",                         		(void *)android_media_MediaPlayer_setHdmiState},
+    /*End by eric_wang. Notify hdmi status.*/
+	{"getMediaPlayerList",  "()I",                         		               (void *)android_media_MediaPlayer_getMediaPlayerList},
+	{"getMediaPlayerInfo",  "(ILandroid/media/MediaPlayer$MediaPlayerInfo;)I", (void *)android_media_MediaPlayer_getMediaPlayerInfo},
 };
 
 static const char* const kClassPathName = "android/media/MediaPlayer";
 
+struct field {
+    const char *class_name;
+    const char *field_name;
+    const char *field_type;
+    jfieldID   *jfield;
+};
+
+static int find_fields(JNIEnv *env, field *fields, int count)
+{
+    for (int i = 0; i < count; i++) {
+        field *f = &fields[i];
+        jclass clazz = env->FindClass(f->class_name);
+        if (clazz == NULL) {
+            ALOGE("Can't find %s", f->class_name);
+            return -1;
+        }
+
+        jfieldID field = env->GetFieldID(clazz, f->field_name, f->field_type);
+        if (field == NULL) {
+            ALOGE("Can't find %s.%s", f->class_name, f->field_name);
+            return -1;
+        }
+
+        *(f->jfield) = field;
+    }
+
+    return 0;
+}
+
 // This function only registers the native methods
 static int register_android_media_MediaPlayer(JNIEnv *env)
 {
+    field fields_to_find[] = {
+        { "android/media/MediaPlayer$MediaPlayerInfo", "width",        "I", &fields.width },
+        { "android/media/MediaPlayer$MediaPlayerInfo", "height",       "I", &fields.height },
+        { "android/media/MediaPlayer$MediaPlayerInfo", "codecType",    "I", &fields.codecType },
+        { "android/media/MediaPlayer$MediaPlayerInfo", "playState",    "I", &fields.playState },
+    };
+
+    if (find_fields(env, fields_to_find, NELEM(fields_to_find)) < 0)
+        return -1;
+	
     return AndroidRuntime::registerNativeMethods(env,
                 "android/media/MediaPlayer", gMethods, NELEM(gMethods));
 }

@@ -535,4 +535,15 @@ public final class DisplayManagerGlobal {
             }
         }
     }
+
+	/* add by allwinner */
+	public int setDisplayParameter(int displaytype, int cmd, int para0, int para1, int para2) {
+        try {
+            return mDm.setDisplayParameter(displaytype, cmd, para0, para1, para2);
+        } catch (RemoteException ex) {
+            Log.e(TAG, "Failed to set display parameter.", ex);
+            return -1;
+        }
+    }
+
 }

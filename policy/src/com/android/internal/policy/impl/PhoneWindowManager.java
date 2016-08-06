@@ -124,6 +124,12 @@ import static android.view.WindowManagerPolicy.WindowManagerFuncs.LID_CLOSED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVER_ABSENT;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_UNCOVERED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVERED;
+/* support the mouse mode */
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.widget.Toast;
+//import com.softwinner.utils.Config;
 
 /**
  * WindowManagerPolicy implementation for the Android phone UI.  This
@@ -148,6 +154,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     // No longer recommended for desk docks; still useful in car docks.
     static final boolean ENABLE_CAR_DOCK_HOME_CAPTURE = true;
     static final boolean ENABLE_DESK_DOCK_HOME_CAPTURE = false;
+
+    static final int WINDOW_TYPE_TEST_MODE = 2099; //new Window type for AllWinner SDK
 
     static final int SHORT_PRESS_POWER_NOTHING = 0;
     static final int SHORT_PRESS_POWER_GO_TO_SLEEP = 1;
@@ -582,6 +590,41 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private static final int MSG_DISPATCH_SHOW_GLOBAL_ACTIONS = 10;
     private static final int MSG_HIDE_BOOT_MESSAGE = 11;
     private static final int MSG_LAUNCH_VOICE_ASSIST_WITH_WAKE_LOCK = 12;
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-12-7 */
+    /* support the mouse mode */
+    private int mLeftBtn  = -1;
+    private int mMidBtn   = -1;
+    private int mRightBtn = -1;
+    private int mLeft     = -1;
+    private int mRight    = -1;
+    private int mTop      = -1;
+    private int mBottom   = -1;
+    private static final int NF_ID_ENTER_KEY_MOUSE_MODE = 1;
+	boolean	mKeyEnterMouseMode = false;
+	NotificationManager mNotifationManager = null;
+	Notification mNotificationEnterKeyMouseMode = null;
+	Toast        mMouseToast = null;
+    Runnable     mPromptEnterMouseMode = new Runnable(){
+        public void run() {
+        	if(mMouseToast == null){
+			    mMouseToast = Toast.makeText(mContext, com.android.internal.R.string.enter_key_mouse_mode, Toast.LENGTH_SHORT);
+			    if(mMouseToast == null){
+			        Log.w(TAG, "Fail in creating toast.");
+			    }else {
+			        mMouseToast.setGravity(Gravity.CENTER, 0, 0);
+			    }
+        	}
+            mMouseToast.setText(com.android.internal.R.string.enter_key_mouse_mode);
+            mMouseToast.show();
+        }
+    };
+    Runnable     mPromptExitMouseMode = new Runnable(){
+             public void run() {
+                 mMouseToast.setText(com.android.internal.R.string.exit_key_mouse_mode);
+                 mMouseToast.show();
+             }
+    };
     private static final int MSG_POWER_DELAYED_PRESS = 13;
     private static final int MSG_POWER_LONG_PRESS = 14;
 
@@ -1098,6 +1141,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     };
 
+    private final Runnable mScreenrecordRunnable = new Runnable() {
+        @Override
+        public void run() {
+            takeScreenrecord();
+        }
+    };
+
     @Override
     public void showGlobalActions() {
         mHandler.removeMessages(MSG_DISPATCH_SHOW_GLOBAL_ACTIONS);
@@ -1313,6 +1363,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         }
                     }
                     @Override
+                    public void onSweepFromRight(int pointCount) {
+                        switch(pointCount){
+                        case 2:
+                            if(Settings.System.getIntForUser(mContext.getContentResolver(),
+                                Settings.System.GESTURE_SCREENSHOT_ENABLE, 0, UserHandle.USER_CURRENT) == 1)
+                                mHandler.post(mScreenshotRunnable);
+                            break;
+                        case 3:
+                            if (Settings.System.getIntForUser(mContext.getContentResolver(),
+                                Settings.System.GESTURE_SCREENRECORD_ENABLE, 0, UserHandle.USER_CURRENT) == 1)
+                                mHandler.post(mScreenrecordRunnable);
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    @Override
                     public void onDebug() {
                         // no-op
                     }
@@ -1336,6 +1403,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mSafeModeEnabledVibePattern = getLongIntArray(mContext.getResources(),
                 com.android.internal.R.array.config_safeModeEnabledVibePattern);
 
+        /* add by Gary. start {{----------------------------------- */
+        /* 2011-12-7 */
+        /* support the mouse mode */
+        mLeftBtn  = SystemProperties.getInt("ro.softmouse.leftbtn.code", -1);
+        mMidBtn   = SystemProperties.getInt("ro.softmouse.midbtn.code", -1);
+        mRightBtn = SystemProperties.getInt("ro.softmouse.rightbtn.code", -1);
+        mLeft     = SystemProperties.getInt("ro.softmouse.left.code", -1);
+        mRight    = SystemProperties.getInt("ro.softmouse.right.code", -1);
+        mTop      = SystemProperties.getInt("ro.softmouse.top.code", -1);
+        mBottom   = SystemProperties.getInt("ro.softmouse.bottom.code", -1);
+        Log.d(TAG, "mLeftBtn = " + mLeftBtn + ", mBottom = " + mBottom);
         mScreenshotChordEnabled = mContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_enableScreenshotChord);
 
@@ -1431,7 +1509,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         int longSizeDp = longSize * DisplayMetrics.DENSITY_DEFAULT / density;
 
         // Allow the navigation bar to move on small devices (phones).
-        mNavigationBarCanMove = shortSizeDp < 600;
+        mNavigationBarCanMove = shortSizeDp < 400;
 
         mHasNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
         // Allow a system property to override this. Used by the emulator.
@@ -2476,7 +2554,14 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     return -1;
                 }
 
-                handleShortPressOnHome();
+                // handleShortPressOnHome();
+                WindowManager.LayoutParams attrs = win != null ? win.getAttrs() : null;
+                if (attrs != null && attrs.type == WINDOW_TYPE_TEST_MODE) {
+                    return 0;
+                } else {
+                    // Go home!
+                    handleShortPressOnHome();
+                }
                 return -1;
             }
 
@@ -2603,6 +2688,76 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 mHandler.post(mScreenshotRunnable);
             }
             return -1;
+        /* add by Gary. end   -----------------------------------}} */
+        /* 2011-12-7 */
+        /* support the mouse mode */
+    } else if (keyCode == KeyEvent.KEYCODE_MOUSE) {
+            Log.v(TAG, "it's KEYCODE_MOUSE key and down = " + down);
+            if(!down){
+			    if(mNotifationManager == null){
+                    mNotifationManager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);     
+    			    if(mNotifationManager == null){
+    			        Log.w(TAG, "Fail in get NotificationManager");
+    			        return -1;
+    			    }
+    			}
+    			if(mNotificationEnterKeyMouseMode == null){
+    			    mNotificationEnterKeyMouseMode = new Notification(com.android.internal.R.drawable.key_mouse, 
+    			                                       mContext.getResources().getText(com.android.internal.R.string.enter_key_mouse_mode), 
+    			                                       System.currentTimeMillis());
+    			    Intent intent = new Intent();
+    			    PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    			    mNotificationEnterKeyMouseMode.setLatestEventInfo(mContext, mContext.getResources().getText(com.android.internal.R.string.title_key_mouse_mode),
+    				                          mContext.getResources().getText(com.android.internal.R.string.detail_key_mouse_mode), contentIntent);
+				}
+				if(mKeyEnterMouseMode)
+				{
+				    /* cancel notification */
+                    mNotifationManager.cancel(NF_ID_ENTER_KEY_MOUSE_MODE);
+                    /* show toast */
+                    mHandler.removeCallbacks(mPromptExitMouseMode);
+                    mHandler.post(mPromptExitMouseMode);
+                    
+					try
+					{
+						mWindowManager.keyExitMouseMode();
+
+						mKeyEnterMouseMode = false;
+					}
+					catch(RemoteException e)
+					{
+						Log.e(TAG,"key Exit Mouse Mode Failed!\n");
+					}
+				}
+				else
+				{
+    			    /* send notification */
+				    mNotifationManager.notify(NF_ID_ENTER_KEY_MOUSE_MODE, mNotificationEnterKeyMouseMode); 
+                    /* show toast */
+                    mHandler.removeCallbacks(mPromptEnterMouseMode);
+                    mHandler.post(mPromptEnterMouseMode);
+				    
+					try
+					{
+						mWindowManager.keyEnterMouseMode();
+
+						mWindowManager.keySetMouseDistance(Settings.System.getInt(mContext.getContentResolver(), Settings.System.MOUSE_ADVANCE, 30));
+
+						mWindowManager.keySetMouseBtnCode(mLeftBtn, mMidBtn, mRightBtn);
+
+						mWindowManager.keySetMouseMoveCode(mLeft, mRight, mTop, mBottom);
+
+						mKeyEnterMouseMode = true;
+					}
+					catch(RemoteException e)
+					{
+						Log.e(TAG,"key enterMouse Mode Failed!\n");
+					}
+				}
+            }
+            return -1;
+        
+        /* add by Gary. end   -----------------------------------}} */
         } else if (keyCode == KeyEvent.KEYCODE_BRIGHTNESS_UP
                 || keyCode == KeyEvent.KEYCODE_BRIGHTNESS_DOWN) {
             if (down) {
@@ -4485,6 +4640,34 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
+    final Object mScreenrecordLock = new Object();
+
+    // Assume this is called from the Handler thread.
+    private void takeScreenrecord() {
+        synchronized (mScreenrecordLock) {
+            ComponentName cn = new ComponentName("com.android.systemui",
+                    "com.android.systemui.screenrecord.TakeScreenrecordService");
+            Intent intent = new Intent();
+            intent.setComponent(cn);
+            ServiceConnection conn = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    synchronized (mScreenrecordLock) {
+                        Messenger messenger = new Messenger(service);
+                        Message msg = Message.obtain(null, 1);
+                        try {
+                            messenger.send(msg);
+                        } catch (RemoteException e) {
+                        }
+                    }
+                }
+                @Override
+                public void onServiceDisconnected(ComponentName name) {}
+            };
+            mContext.bindServiceAsUser(intent, conn, Context.BIND_AUTO_CREATE, UserHandle.CURRENT);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public int interceptKeyBeforeQueueing(KeyEvent event, int policyFlags) {
@@ -4995,6 +5178,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 // Swipe-up for navigation bar is disabled during setup
                 return;
             }
+            if (checkIgnoreRequestTransientBars()) {
+                // Swipe-up for navigation bar is disabled when set flag View.SYSTEM_UI_FLAG_ALWAYS
+                return;
+            }
             boolean sb = mStatusBarController.checkShowTransientBarLw();
             boolean nb = mNavigationBarController.checkShowTransientBarLw();
             if (sb || nb) {
@@ -5009,6 +5196,30 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 updateSystemUiVisibilityLw();
             }
         }
+    }
+
+    private boolean checkIgnoreRequestTransientBars() {
+        // If there is no window focused, there will be nobody to handle the events
+        // anyway, so just hang on in whatever state we're in until things settle down.
+        WindowState win = mFocusedWindow != null ? mFocusedWindow : mTopFullscreenOpaqueWindowState;
+        if (win == null) {
+            return false;
+        }
+        if (win.getAttrs().type == TYPE_KEYGUARD && mHideLockScreen == true) {
+            // We are updating at a point where the keyguard has gotten
+            // focus, but we were last in a state where the top window is
+            // hiding it.  This is probably because the keyguard as been
+            // shown while the top window was displayed, so we want to ignore
+            // it here because this is just a very transient change and it
+            // will quickly lose focus once it correctly gets hidden.
+            return false;
+        }
+
+        int tmpVisibility = win.getSystemUiVisibility()
+                & ~mResettingSystemUiFlags
+                & ~mForceClearedSystemUiFlags;
+        boolean always = (tmpVisibility & View.SYSTEM_UI_FLAG_ALWAYS) != 0;
+        return always;
     }
 
     // Called on the PowerManager's Notifier thread.

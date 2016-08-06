@@ -50,14 +50,16 @@ public class SignalClusterView
     private boolean mVpnVisible = false;
     private boolean mWifiVisible = false;
     private int mWifiStrengthId = 0;
+    private boolean mEthernetVisible = false;
+    private int mEthernetStateId = 0;
     private boolean mIsAirplaneMode = false;
     private int mAirplaneIconId = 0;
     private int mAirplaneContentDescription;
-    private String mWifiDescription;
+    private String mWifiDescription, mEthernetDescription;
     private ArrayList<PhoneState> mPhoneStates = new ArrayList<PhoneState>();
 
-    ViewGroup mWifiGroup;
-    ImageView mVpn, mWifi, mAirplane, mNoSims;
+    ViewGroup mWifiGroup, mEthernetGroup;
+    ImageView mVpn, mWifi, mAirplane, mNoSims, mEthernet;
     View mWifiAirplaneSpacer;
     View mWifiSignalSpacer;
     LinearLayout mMobileSignalGroup;
@@ -111,6 +113,8 @@ public class SignalClusterView
         mVpn            = (ImageView) findViewById(R.id.vpn);
         mWifiGroup      = (ViewGroup) findViewById(R.id.wifi_combo);
         mWifi           = (ImageView) findViewById(R.id.wifi_signal);
+        mEthernetGroup  = (ViewGroup) findViewById(R.id.ethernet_combo);
+        mEthernet       = (ImageView) findViewById(R.id.ethernet_state);
         mAirplane       = (ImageView) findViewById(R.id.airplane);
         mNoSims         = (ImageView) findViewById(R.id.no_sims);
         mWifiAirplaneSpacer =         findViewById(R.id.wifi_airplane_spacer);
@@ -128,6 +132,8 @@ public class SignalClusterView
         mVpn            = null;
         mWifiGroup      = null;
         mWifi           = null;
+        mEthernetGroup  = null;
+        mEthernet       = null;
         mAirplane       = null;
         mMobileSignalGroup.removeAllViews();
         mMobileSignalGroup = null;
@@ -156,6 +162,13 @@ public class SignalClusterView
         apply();
     }
 
+    public void setEthernetIndicators(boolean visible,int strengthIcon, String contentDescription){
+               mEthernetVisible = visible;
+               mEthernetStateId = strengthIcon;
+               mEthernetDescription = contentDescription;
+        apply();
+    }
+
     @Override
     public void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
             String contentDescription, String typeContentDescription, boolean isTypeIconWide,
@@ -170,6 +183,7 @@ public class SignalClusterView
 
         apply();
     }
+
 
     @Override
     public void setNoSims(boolean show) {
@@ -236,6 +250,10 @@ public class SignalClusterView
             mWifi.setImageDrawable(null);
         }
 
+        if (mEthernet != null) {
+            mEthernet.setImageDrawable(null);
+        }
+
         for (PhoneState state : mPhoneStates) {
             if (state.mMobile != null) {
                 state.mMobile.setImageDrawable(null);
@@ -269,6 +287,14 @@ public class SignalClusterView
             mWifiGroup.setVisibility(View.VISIBLE);
         } else {
             mWifiGroup.setVisibility(View.GONE);
+        }
+
+        if (mEthernetVisible) {
+            mEthernetGroup.setVisibility(View.VISIBLE);
+            mEthernet.setImageResource(mEthernetStateId);
+            mEthernetGroup.setContentDescription(mEthernetDescription);
+        } else {
+            mEthernetGroup.setVisibility(View.GONE);
         }
 
         if (DEBUG) Log.d(TAG,
@@ -311,7 +337,7 @@ public class SignalClusterView
         mNoSims.setVisibility(mNoSimsVisible ? View.VISIBLE : View.GONE);
 
         boolean anythingVisible = mNoSimsVisible || mWifiVisible || mIsAirplaneMode
-                || anyMobileVisible || mVpnVisible;
+                || anyMobileVisible || mVpnVisible || mEthernetVisible;
         setPaddingRelative(0, 0, anythingVisible ? mEndPadding : mEndPaddingNothingVisible, 0);
     }
 

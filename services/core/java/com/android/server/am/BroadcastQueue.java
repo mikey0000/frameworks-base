@@ -325,7 +325,7 @@ public final class BroadcastQueue {
                 + mQueueName + "]: current="
                 + mBroadcastsScheduled);
 
-        if (mBroadcastsScheduled) {
+        if (!ActivityManagerService.SCHEDULE_BROADCAST || mBroadcastsScheduled) {
             return;
         }
         mHandler.sendMessage(mHandler.obtainMessage(BROADCAST_INTENT_MSG, this));

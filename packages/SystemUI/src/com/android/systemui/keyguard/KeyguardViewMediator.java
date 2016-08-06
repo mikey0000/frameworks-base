@@ -701,12 +701,14 @@ public class KeyguardViewMediator extends SystemUI {
             doKeyguardLocked(null);
         } else {
             // Lock in the future
-            long when = SystemClock.elapsedRealtime() + timeout;
+            //long when = SystemClock.elapsedRealtime() + timeout;
+            long when = System.currentTimeMillis() + timeout;
             Intent intent = new Intent(DELAYED_KEYGUARD_ACTION);
             intent.putExtra("seq", mDelayedShowingSequence);
             PendingIntent sender = PendingIntent.getBroadcast(mContext,
                     0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, sender);
+            //mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, sender);
+            mAlarmManager.setExact(AlarmManager.RTC_SHUTDOWN_WAKEUP, when, sender);
             if (DEBUG) Log.d(TAG, "setting alarm to turn off keyguard, seq = "
                              + mDelayedShowingSequence);
         }

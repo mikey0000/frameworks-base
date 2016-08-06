@@ -19,6 +19,13 @@
      ***************************************************************
      *************************************************************** -->
 <resources>
+  <!-- support the mouse mode -->
+  <java-symbol type="string" name="enter_key_mouse_mode" />
+  <java-symbol type="string" name="exit_key_mouse_mode" />
+  <java-symbol type="string" name="title_key_mouse_mode" />
+  <java-symbol type="string" name="detail_key_mouse_mode" />
+  <!-- an icon for the mouse mode -->
+  <java-symbol type="drawable" name="key_mouse" />
 
 <!-- ===============================================================
      Resources for version 1 of the platform.

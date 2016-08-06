@@ -97,6 +97,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
@@ -188,6 +189,7 @@ import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.DynamicPManager;
 import android.provider.Settings;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -397,18 +399,24 @@ public final class ActivityManagerService extends ActivityManagerNative
 
     BroadcastQueue mFgBroadcastQueue;
     BroadcastQueue mBgBroadcastQueue;
+    BroadcastQueue mLoginAccountsChangeBroadcastQueue;
     // Convenient for easy iteration over the queues. Foreground is first
     // so that dispatch of foreground broadcasts gets precedence.
-    final BroadcastQueue[] mBroadcastQueues = new BroadcastQueue[2];
+    final BroadcastQueue[] mBroadcastQueues = new BroadcastQueue[3];
 
     BroadcastQueue broadcastQueueForIntent(Intent intent) {
+        final boolean isLoginAccountChangedAction = AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION.equals(intent.getAction());
         final boolean isFg = (intent.getFlags() & Intent.FLAG_RECEIVER_FOREGROUND) != 0;
         if (DEBUG_BACKGROUND_BROADCAST) {
             Slog.i(TAG, "Broadcast intent " + intent + " on "
-                    + (isFg ? "foreground" : "background")
+                    + (isLoginAccountChangedAction ? "loginAccountChanged" : (isFg ? "foreground" : "background"))
                     + " queue");
         }
-        return (isFg) ? mFgBroadcastQueue : mBgBroadcastQueue;
+        if (isLoginAccountChangedAction) {
+            return mLoginAccountsChangeBroadcastQueue;
+        } else {
+            return (isFg) ? mFgBroadcastQueue : mBgBroadcastQueue;
+        }
     }
 
     BroadcastRecord broadcastRecordForReceiverLocked(IBinder receiver) {
@@ -1277,6 +1285,13 @@ public final class ActivityManagerService extends ActivityManagerNative
     static final int FIRST_COMPAT_MODE_MSG = 300;
     static final int FIRST_SUPERVISOR_STACK_MSG = 100;
 
+    static final int NOTIFY_CHECK_BACKGROUND_TASK_MSG = 9527;
+
+    boolean mKillBackgroundServices = false;
+    String[] mBackgroundServicesWhitelist = null;
+    static final long BACKGROUND_TASK_IDLE_TIME = 1 * 60 * 1000; // 1min
+    Map<String, Long> mRecentPackasges = new HashMap<String, Long>();
+
     CompatModeDialog mCompatModeDialog;
     long mLastMemUsageReportTime = 0;
 
@@ -1808,6 +1823,28 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
                 break;
             }
+            case NOTIFY_CHECK_BACKGROUND_TASK_MSG: {
+                synchronized (mRecentPackasges) {
+                    int lowmem = lowmemValue();
+	                long now = System.currentTimeMillis();
+	                Iterator<Map.Entry<String, Long>> it = mRecentPackasges.entrySet().iterator();
+	                while (lowmem != 0 && it.hasNext()) {
+	                    Map.Entry<String, Long> entry = it.next();
+	                    long time = entry.getValue();
+	                    if (time < 0) continue;
+	                    else if (now - time > BACKGROUND_TASK_IDLE_TIME * lowmem) {
+	                        if (true)  Slog.e(TAG, "NOTIFY_CHECK_BACKGROUND_TASK_MSG forceStopPackage: " + entry.getKey()
+	                                + " idle " + (now - time) + "ms" + "  lowmem = " + lowmem);
+	                        int userId = mTargetUserId != UserHandle.USER_NULL ? mTargetUserId : mCurrentUserId;
+	                        forceStopPackage(entry.getKey(), userId);
+	                        it.remove();
+	                        lowmem = lowmemValue();
+	                    }
+	                }
+                    checkBackgroundTaskDelay(BACKGROUND_TASK_IDLE_TIME * 3);
+                }
+                break;
+            }
             }
         }
     };
@@ -2073,8 +2110,12 @@ public final class ActivityManagerService extends ActivityManagerNative
                 "foreground", BROADCAST_FG_TIMEOUT, false);
         mBgBroadcastQueue = new BroadcastQueue(this, mHandler,
                 "background", BROADCAST_BG_TIMEOUT, true);
+        mLoginAccountsChangeBroadcastQueue = new BroadcastQueue(this, mHandler,
+                "login_accounts_change", BROADCAST_BG_TIMEOUT, true);
+
         mBroadcastQueues[0] = mFgBroadcastQueue;
         mBroadcastQueues[1] = mBgBroadcastQueue;
+        mBroadcastQueues[2] = mLoginAccountsChangeBroadcastQueue;
 
         mServices = new ActiveServices(this);
         mProviderMap = new ProviderMap(this);
@@ -3060,6 +3101,25 @@ public final class ActivityManagerService extends ActivityManagerNative
             app.setPid(startResult.pid);
             app.usingWrapper = startResult.usingWrapper;
             app.removed = false;
+            ActivityStack stack = getFocusedStack();
+            if (stack != null) {
+                int ret = 0;
+                ret = stack.checkFileName(app.processName);
+                if (ret > 0) {
+                    mStackSupervisor.mCurSence_pid = app.pid;
+                    mStackSupervisor.mIsPerfLockAcquired = false;
+                    mStackSupervisor.mIsExtremeMode = true;
+                    //SystemProperties.set("sys.boost_up_perf.mode", "mode_extreme" + " " + Integer.toString(app.pid) + " " + Integer.toString(ret));
+                    Intent bupIntent = new Intent();
+                    bupIntent.setAction(Intent.ACTION_BOOST_UP_PERF);
+                    bupIntent.putExtra("mode", DynamicPManager.BOOST_UPERF_EXTREME);
+                    bupIntent.putExtra("pid", mStackSupervisor.mCurSence_pid);
+                    bupIntent.putExtra("index", ret);
+                    mStackSupervisor.mDPM.notifyDPM(bupIntent);
+                }else{
+                    mStackSupervisor.mCurSence_pid = 0;
+                }
+            }
             app.killed = false;
             app.killedByAm = false;
             checkTime(startTime, "startProcess: starting to update pids map");
@@ -3084,6 +3144,43 @@ public final class ActivityManagerService extends ActivityManagerNative
         }
     }
 
+    boolean isBackgroundTaskWhitelist(String packageName) {
+        if (!mKillBackgroundServices) return true;
+        if (mBackgroundServicesWhitelist == null) return true;
+        for (String pkg : mBackgroundServicesWhitelist) {
+            if (packageName.startsWith(pkg))
+                return true;
+        }
+        return false;
+    }
+	int lowmemValue() {
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        getMemoryInfo(mi);
+        if(mi.availMem < 160 * 1024 * 1024)
+            return 1;
+        else if(mi.availMem < 224 * 1024 * 1024)
+            return 2;
+        else if(mi.availMem < 256 * 1024 * 1024)
+            return 5;
+        else if(mi.availMem < 288 * 1024 * 1024)
+            return 10;
+        else
+            return 0;
+    }
+    private void checkPackage(String packageName, long timestamp) {
+        if (!isBackgroundTaskWhitelist(packageName)) {
+            synchronized(mRecentPackasges) {
+                mRecentPackasges.put(packageName, timestamp);
+                checkBackgroundTaskDelay(2000L);
+            }
+        }
+    }
+    private void checkBackgroundTaskDelay(long delayMillis) {
+        mHandler.removeMessages(NOTIFY_CHECK_BACKGROUND_TASK_MSG);
+        Message msg = mHandler.obtainMessage(NOTIFY_CHECK_BACKGROUND_TASK_MSG);
+        mHandler.sendMessageDelayed(msg, delayMillis);
+    }
+
     void updateUsageStats(ActivityRecord component, boolean resumed) {
         if (DEBUG_SWITCH) Slog.d(TAG, "updateUsageStats: comp=" + component + "res=" + resumed);
         final BatteryStatsImpl stats = mBatteryStatsService.getActiveStatistics();
@@ -3104,6 +3201,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                 stats.noteActivityPausedLocked(component.app.uid);
             }
         }
+        checkPackage(component.packageName, resumed ? -1L : System.currentTimeMillis());
     }
 
     Intent getHomeIntent() {
@@ -6253,12 +6351,17 @@ public final class ActivityManagerService extends ActivityManagerNative
         }
     }
 
+    static boolean SCHEDULE_BROADCAST = false;
     @Override
     public void bootAnimationComplete() {
         final boolean callFinishBooting;
         synchronized (this) {
             callFinishBooting = mCallFinishBooting;
             mBootAnimationComplete = true;
+            SCHEDULE_BROADCAST = true;
+            for (BroadcastQueue queue : mBroadcastQueues) {
+                queue.scheduleBroadcastsLocked();
+            }
         }
         if (callFinishBooting) {
             finishBooting();
@@ -11008,6 +11111,8 @@ public final class ActivityManagerService extends ActivityManagerNative
             // This will take care of setting the correct layout direction flags
             configuration.setLayoutDirection(configuration.locale);
         }
+        boolean killBackgroundServices = Settings.System.getInt(
+                resolver, Settings.System.KILL_BACKGROUND_SERVICES, 0) != 0;
 
         synchronized (this) {
             mDebugApp = mOrigDebugApp = debugApp;
@@ -11017,6 +11122,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             // change mConfiguration in-place.
             updateConfigurationLocked(configuration, null, false, true);
             if (DEBUG_CONFIGURATION) Slog.v(TAG, "Initial config: " + mConfiguration);
+            mKillBackgroundServices = killBackgroundServices;
         }
     }
 
@@ -11026,6 +11132,9 @@ public final class ActivityManagerService extends ActivityManagerNative
         mHasRecents = res.getBoolean(com.android.internal.R.bool.config_hasRecents);
         mThumbnailWidth = res.getDimensionPixelSize(com.android.internal.R.dimen.thumbnail_width);
         mThumbnailHeight = res.getDimensionPixelSize(com.android.internal.R.dimen.thumbnail_height);
+        if (mKillBackgroundServices) {
+            mBackgroundServicesWhitelist = res.getStringArray(com.android.internal.R.array.background_services_whitelist);
+        }
     }
 
     public boolean testIsSystemReady() {
@@ -11148,6 +11257,10 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
             }
 
+            if (ris.size() > 0) {
+                SCHEDULE_BROADCAST = true;
+            }
+
             // If primary user, send broadcast to all available users, else just to userId
             final int[] users = userId == UserHandle.USER_OWNER ? getUsersLocked()
                     : new int[] { userId };
@@ -11227,6 +11340,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                     }
                 }, doneReceivers, UserHandle.USER_OWNER);
 
+                mStackSupervisor.mDPM = DynamicPManager.getInstance();
                 if (mWaitingUpdate) {
                     return;
                 }
@@ -15554,7 +15668,8 @@ public final class ActivityManagerService extends ActivityManagerNative
 
     boolean isPendingBroadcastProcessLocked(int pid) {
         return mFgBroadcastQueue.isPendingBroadcastProcessLocked(pid)
-                || mBgBroadcastQueue.isPendingBroadcastProcessLocked(pid);
+                || mBgBroadcastQueue.isPendingBroadcastProcessLocked(pid)
+                || mLoginAccountsChangeBroadcastQueue.isPendingBroadcastProcessLocked(pid);
     }
 
     void skipPendingBroadcastLocked(int pid) {

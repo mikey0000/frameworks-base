@@ -65,6 +65,7 @@ import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
+import android.os.DynamicPManager;
 import java.util.Objects;
 
 /**
@@ -973,8 +974,23 @@ final class ActivityRecord {
                 service.scheduleAppGcsLocked();
             }
         }
+        if (service.testIsSystemReady()) {
+            if (mStackSupervisor.mIsExtremeMode != true && mStackSupervisor.mIsPerfLockAcquired == true) {
+                //boost down perf
+                Intent bupIntent = new Intent().setAction(Intent.ACTION_BOOST_UP_PERF).putExtra("mode", DynamicPManager.BOOST_UPERF_NORMAL);
+                mStackSupervisor.mDPM.notifyDPM(bupIntent);
+                mStackSupervisor.mIsPerfLockAcquired = false;
+            } else if("com.android.launcher".equals(this.processName)) {
+                //now we are home in font
+                Intent bupIntent = new Intent().setAction(Intent.ACTION_BOOST_UP_PERF).putExtra("mode", DynamicPManager.BOOST_UPERF_NORMAL);
+                mStackSupervisor.mDPM.notifyDPM(bupIntent);
+                mStackSupervisor.mIsPerfLockAcquired = false;
+                mStackSupervisor.mIsExtremeMode = false;
+            }
+        }
+        Log.i(ActivityManagerService.TAG, "Timeline: Activity_windows_visible id: "
+                + this.processName + " time:" + (SystemClock.uptimeMillis() - displayStartTime));
     }
-
     public void windowsGone() {
         if (ActivityManagerService.DEBUG_SWITCH) Log.v(
                 ActivityManagerService.TAG, "windowsGone(): " + this);

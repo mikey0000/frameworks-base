@@ -214,7 +214,7 @@ public class AppWidgetHostView extends FrameLayout {
 
     private int generateId() {
         final int id = getId();
-        return id == View.NO_ID ? mAppWidgetId : id;
+        return id == View.NO_ID ? (mAppWidgetId + 1000) : id;
     }
 
     @Override

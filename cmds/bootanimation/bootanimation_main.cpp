@@ -51,8 +51,11 @@ int main(int argc, char** argv)
         sp<ProcessState> proc(ProcessState::self());
         ProcessState::self()->startThreadPool();
 
+        char *animation = NULL;
+        if (argc > 0)
+            animation = argv[1];
         // create the boot animation object
-        sp<BootAnimation> boot = new BootAnimation();
+        sp<BootAnimation> boot = new BootAnimation(animation);
 
         IPCThreadState::self()->joinThreadPool();
 

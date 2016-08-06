@@ -128,7 +128,7 @@ final class ProcessList {
     // we have no limit on the number of service, visible, foreground, or other such
     // processes and the number of those processes does not count against the cached
     // process limit.
-    static final int MAX_CACHED_APPS = 32;
+    static final int MAX_CACHED_APPS = ("true".equals(SystemProperties.get("ro.config.low_ram", "false")) ? 12 : 32);
 
     // We allow empty processes to stick around for at most 30 minutes.
     static final long MAX_EMPTY_TIME = 30*60*1000;
@@ -270,9 +270,9 @@ final class ProcessList {
         // before killing background processes.
         mCachedRestoreLevel = (getMemLevel(ProcessList.CACHED_APP_MAX_ADJ)/1024) / 3;
 
-        // Ask the kernel to try to keep enough memory free to allocate 3 full
+        // Ask the kernel to try to keep enough memory free to allocate 5 full
         // screen 32bpp buffers without entering direct reclaim.
-        int reserve = displayWidth * displayHeight * 4 * 3 / 1024;
+        int reserve = displayWidth * displayHeight * 4 * 5 / 1024;
         int reserve_adj = Resources.getSystem().getInteger(com.android.internal.R.integer.config_extraFreeKbytesAdjust);
         int reserve_abs = Resources.getSystem().getInteger(com.android.internal.R.integer.config_extraFreeKbytesAbsolute);
 

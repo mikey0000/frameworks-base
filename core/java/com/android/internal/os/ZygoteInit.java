@@ -263,6 +263,20 @@ public class ZygoteInit {
         Log.d(TAG, "end preload");
     }
 
+    static void preload2() {
+        EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_START,
+            SystemClock.uptimeMillis());
+        preload();
+        EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_END,
+            SystemClock.uptimeMillis());
+
+        // Finish profiling the zygote initialization.
+        SamplingProfilerIntegration.writeZygoteSnapshot();
+
+        // Do an initial gc to clean up after startup
+        gc();
+    }
+
     private static void preloadSharedLibraries() {
         Log.i(TAG, "Preloading shared libraries...");
         System.loadLibrary("android");
@@ -670,17 +684,11 @@ public class ZygoteInit {
             }
 
             registerZygoteSocket(socketName);
-            EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_START,
-                SystemClock.uptimeMillis());
-            preload();
-            EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_END,
-                SystemClock.uptimeMillis());
 
-            // Finish profiling the zygote initialization.
-            SamplingProfilerIntegration.writeZygoteSnapshot();
-
-            // Do an initial gc to clean up after startup
-            gc();
+            boolean isFirstBoot = SystemProperties.getBoolean("persist.sys.boot.first", true);
+            if (isFirstBoot) {
+                preload2();
+            }
 
             // Disable tracing so that forked processes do not inherit stale tracing tags from
             // Zygote.
@@ -688,6 +696,15 @@ public class ZygoteInit {
 
             if (startSystemServer) {
                 startSystemServer(abiList, socketName);
+            }
+
+            if (!isFirstBoot) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        preload2();
+                    }
+                }.start();
             }
 
             Log.i(TAG, "Accepting command socket connections");

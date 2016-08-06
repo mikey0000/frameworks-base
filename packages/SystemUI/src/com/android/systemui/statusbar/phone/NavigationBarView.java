@@ -271,6 +271,22 @@ public class NavigationBarView extends LinearLayout {
         return mCurrentView.findViewById(R.id.ime_switcher);
     }
 
+    public View getVolumeDownButton() {
+        if(mContext.getResources().getBoolean(R.bool.hasVolumeButton)){
+            return mCurrentView.findViewById(R.id.volume_down);
+        }else{
+            return null;
+        }
+    }
+
+    public View getVolumeUpButton() {
+        if(mContext.getResources().getBoolean(R.bool.hasVolumeButton)){
+            return mCurrentView.findViewById(R.id.volume_up);
+        } else {
+            return null;
+        }
+    }
+
     private void getIcons(Resources res) {
         mBackIcon = res.getDrawable(R.drawable.ic_sysbar_back);
         mBackLandIcon = res.getDrawable(R.drawable.ic_sysbar_back_land);
@@ -369,6 +385,11 @@ public class NavigationBarView extends LinearLayout {
         getBackButton()   .setVisibility(disableBack       ? View.INVISIBLE : View.VISIBLE);
         getHomeButton()   .setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
         getRecentsButton().setVisibility(disableRecent     ? View.INVISIBLE : View.VISIBLE);
+
+        if(mContext.getResources().getBoolean(R.bool.hasVolumeButton)) {
+            getVolumeDownButton().setVisibility(disableHome ? View.INVISIBLE : View.VISIBLE);
+            getVolumeUpButton().setVisibility(disableHome   ? View.INVISIBLE : View.VISIBLE);
+        }
 
         mBarTransitions.applyBackButtonQuiescentAlpha(mBarTransitions.getMode(), true /*animate*/);
     }

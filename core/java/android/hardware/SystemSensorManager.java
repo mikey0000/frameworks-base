@@ -410,6 +410,8 @@ public class SystemSensorManager extends SensorManager {
             if (mListener instanceof SensorEventListener2) {
                 final Sensor sensor = sHandleToSensor.get(handle);
                 ((SensorEventListener2)mListener).onFlushCompleted(sensor);
+                 Log.d(TAG,"dispatchFlushCompleteEvent add onFlushCompleted");
+                ((SensorEventListener2)mListener).onFlushCompleted(sensor);
             }
             return;
         }

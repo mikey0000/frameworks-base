@@ -304,7 +304,8 @@ public class LegacyResultMapper {
 
         // control.aeLock
         {
-            boolean lock = p.isAutoExposureLockSupported() ? p.getAutoExposureLock() : false;
+        boolean lock = p.isAutoExposureLockSupported() ? p.getAutoExposureLock() : false;
+          //  boolean lock = p.getAutoExposureLock();
             m.set(CONTROL_AE_LOCK, lock);
             if (VERBOSE) {
                 Log.v(TAG,

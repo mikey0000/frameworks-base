@@ -59,6 +59,7 @@ public:
     virtual ~AlarmImpl();
 
     virtual int set(int type, struct timespec *ts) = 0;
+    virtual int clear(int type) = 0;
     virtual int setTime(struct timeval *tv) = 0;
     virtual int waitForAlarm() = 0;
 
@@ -73,6 +74,7 @@ public:
     AlarmImplAlarmDriver(int fd) : AlarmImpl(&fd, 1) { }
 
     int set(int type, struct timespec *ts);
+    int clear(int type);
     int setTime(struct timeval *tv);
     int waitForAlarm();
 };
@@ -85,6 +87,7 @@ public:
     ~AlarmImplTimerFd();
 
     int set(int type, struct timespec *ts);
+    int clear(int type);
     int setTime(struct timeval *tv);
     int waitForAlarm();
 
@@ -109,6 +112,11 @@ AlarmImpl::~AlarmImpl()
 int AlarmImplAlarmDriver::set(int type, struct timespec *ts)
 {
     return ioctl(fds[0], ANDROID_ALARM_SET(type), ts);
+}
+
+int AlarmImplAlarmDriver::clear(int type)
+{
+    return ioctl(fds[0], ANDROID_ALARM_CLEAR(type));
 }
 
 int AlarmImplAlarmDriver::setTime(struct timeval *tv)
@@ -155,6 +163,26 @@ int AlarmImplTimerFd::set(int type, struct timespec *ts)
     memcpy(&spec.it_value, ts, sizeof(spec.it_value));
 
     return timerfd_settime(fds[type], TFD_TIMER_ABSTIME, &spec, NULL);
+}
+
+int AlarmImplTimerFd::clear(int type)
+{
+    if (type > ANDROID_ALARM_TYPE_COUNT) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    struct itimerspec spec;
+    memset(&spec, 0, sizeof(spec));
+    /* 0 = disarmed; the timerfd doesn't need to be armed to get
+       RTC change notifications, just set up as cancelable */
+
+    int err = timerfd_settime(fds[ANDROID_ALARM_TYPE_COUNT],
+            TFD_TIMER_ABSTIME | TFD_TIMER_CANCEL_ON_SET, &spec, NULL);
+    if (err < 0) {
+        ALOGV("timerfd_settime() failed: %s", strerror(errno));
+    }
+    return err;
 }
 
 int AlarmImplTimerFd::setTime(struct timeval *tv)
@@ -371,6 +399,17 @@ static void android_server_AlarmManagerService_set(JNIEnv*, jobject, jlong nativ
     }
 }
 
+static void android_server_AlarmManagerService_clear(JNIEnv*, jobject, jlong nativeData, jint type)
+{
+    AlarmImpl *impl = reinterpret_cast<AlarmImpl *>(nativeData);
+
+    int result = impl->clear(type);
+    if (result < 0)
+    {
+        ALOGE("Unable to clear alarm type=%d, result=%d\n", type, result);
+    }
+}
+
 static jint android_server_AlarmManagerService_waitForAlarm(JNIEnv*, jobject, jlong nativeData)
 {
     AlarmImpl *impl = reinterpret_cast<AlarmImpl *>(nativeData);
@@ -395,6 +434,7 @@ static JNINativeMethod sMethods[] = {
     {"init", "()J", (void*)android_server_AlarmManagerService_init},
     {"close", "(J)V", (void*)android_server_AlarmManagerService_close},
     {"set", "(JIJJ)V", (void*)android_server_AlarmManagerService_set},
+    {"clear", "(JI)V", (void*)android_server_AlarmManagerService_clear},
     {"waitForAlarm", "(J)I", (void*)android_server_AlarmManagerService_waitForAlarm},
     {"setKernelTime", "(JJ)I", (void*)android_server_AlarmManagerService_setKernelTime},
     {"setKernelTimezone", "(JI)I", (void*)android_server_AlarmManagerService_setKernelTimezone},

@@ -175,6 +175,20 @@ static void maybeCreateDalvikCache() {
             "Error changing dalvik-cache permissions : %s", strerror(errno));
 }
 
+static int wait_for_data(int timeout)
+{
+    int i = 0;
+    int ret = -1;
+    char prop[PROP_VALUE_MAX];
+    const char *ZYGOTE_WAIT_PROPERTY = "zygote.mount_fs_data_done";
+
+    while (i++ < timeout
+        && (ret = property_get(ZYGOTE_WAIT_PROPERTY, prop, NULL)) == 0)
+        usleep(10000);
+
+    return ret;
+}
+
 #if defined(__LP64__)
 static const char ABI_LIST_PROPERTY[] = "ro.product.cpu.abilist64";
 static const char ZYGOTE_NICE_NAME[] = "zygote64";
@@ -185,14 +199,14 @@ static const char ZYGOTE_NICE_NAME[] = "zygote";
 
 int main(int argc, char* const argv[])
 {
-    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
+    /*if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
         // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
         // EINVAL. Don't die on such kernels.
         if (errno != EINVAL) {
             LOG_ALWAYS_FATAL("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
             return 12;
         }
-    }
+    }*/
 
     AppRuntime runtime(argv[0], computeArgBlockSize(argc, argv));
     // Process command line arguments
@@ -273,6 +287,7 @@ int main(int argc, char* const argv[])
         args.add(application ? String8("application") : String8("tool"));
         runtime.setClassNameAndArgs(className, argc - i, argv + i);
     } else {
+        wait_for_data(1000);
         // We're in zygote mode.
         maybeCreateDalvikCache();
 

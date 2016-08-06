@@ -36,6 +36,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -636,6 +637,19 @@ public class ConnectivityManager {
      * {@link android.Manifest.permission#ACCESS_NETWORK_STATE}.
      */
     public NetworkInfo getNetworkInfo(int networkType) {
+        if (networkType == TYPE_MOBILE) {
+            if(SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")) {
+                final StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+                StackTraceElement caller = callStack[3];
+                if (caller != null) {
+//		   Log.d(TAG, "  getNetworkInfo className = " + caller.getClassName() );
+		   if(caller.getClassName().contains("android.telephony.cts")){
+//		   	 Log.d(TAG, " getNetworkInfo contain android.telephony.cts");
+                         return null;
+		   }     
+                }
+           }       
+       }
         try {
             return mService.getNetworkInfo(networkType);
         } catch (RemoteException e) {
@@ -1827,6 +1841,21 @@ public class ConnectivityManager {
      * @hide
      */
     public boolean isNetworkSupported(int networkType) {
+        //report do not support mobile network to setupwizard when we don't hava
+        //embeded mobile module but support usb dongle. This will skip meaningless
+        //wait for mobile state at during deivce setup.
+        if (networkType == TYPE_MOBILE) {
+            if(SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")) {
+                final StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+                StackTraceElement caller = callStack[3];
+                if (caller != null) {
+                    if ("com.google.android.setupwizard.BaseActivity".equals(caller.getClassName()) &&
+                        "isMobileNetworkSupported".equals(caller.getMethodName())) {
+                        return false;
+                    }
+                }
+            }
+        }
         try {
             return mService.isNetworkSupported(networkType);
         } catch (RemoteException e) {}

@@ -2596,6 +2596,13 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     public static final int SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 0x00001000;
 
     /**
+     * Flag for {@link #setSystemUiVisibility(int)}: When using {@link #SYSTEM_UI_FLAG_HIDE_NAVIGATION}
+     * or {@link #SYSTEM_UI_FLAG_FULLSCREEN}, with flag {@link #SYSTEM_UI_FLAG_IMMERSIVE_STICKY} or
+     * {@link #SYSTEM_UI_FLAG_IMMERSIVE} and this flag, navigationbar or statusbar will always be hide.
+     */
+    public static final int SYSTEM_UI_FLAG_ALWAYS = 0x00002000;
+
+    /**
      * @deprecated Use {@link #SYSTEM_UI_FLAG_LOW_PROFILE} instead.
      */
     public static final int STATUS_BAR_HIDDEN = SYSTEM_UI_FLAG_LOW_PROFILE;

@@ -16,6 +16,8 @@
 
 package com.android.keyguard;
 
+import static android.telephony.TelephonyManager.SIM_STATE_READY;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -26,6 +28,7 @@ import android.content.res.TypedArray;
 import android.net.ConnectivityManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.text.method.SingleLineTransformationMethod;
 import android.util.AttributeSet;
@@ -46,6 +49,7 @@ public class CarrierText extends TextView {
 
     private LockPatternUtils mLockPatternUtils;
     private KeyguardUpdateMonitor mKeyguardUpdateMonitor;
+    private TelephonyManager mTm;
 
     private KeyguardUpdateMonitorCallback mCallback = new KeyguardUpdateMonitorCallback() {
         @Override
@@ -82,6 +86,7 @@ public class CarrierText extends TextView {
     public CarrierText(Context context, AttributeSet attrs) {
         super(context, attrs);
         mLockPatternUtils = new LockPatternUtils(mContext);
+        mTm = TelephonyManager.from(context);
         boolean useAllCaps;
         TypedArray a = context.getTheme().obtainStyledAttributes(
                 attrs, R.styleable.CarrierText, 0, 0);
@@ -144,6 +149,10 @@ public class CarrierText extends TextView {
                 }
                 displayText =  makeCarrierStringOnEmergencyCapable(
                         getContext().getText(R.string.keyguard_missing_sim_message_short), text);
+            }
+
+            if (mTm.getSimState() != SIM_STATE_READY) {
+                displayText = "";
             }
         }
         setText(displayText);

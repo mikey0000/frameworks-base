@@ -754,6 +754,8 @@ public final class PowerManagerService extends SystemService
                     throw new IllegalArgumentException("Wake lock is already dead.");
                 }
                 mWakeLocks.add(wakeLock);
+
+                SystemProperties.set("sys.wakelock.count", mWakeLocks.size() + "");
                 notifyAcquire = true;
             }
 
@@ -833,6 +835,7 @@ public final class PowerManagerService extends SystemService
 
     private void removeWakeLockLocked(WakeLock wakeLock, int index) {
         mWakeLocks.remove(index);
+        SystemProperties.set("sys.wakelock.count", mWakeLocks.size() + "");
         notifyWakeLockReleasedLocked(wakeLock);
 
         applyWakeLockFlagsOnReleaseLocked(wakeLock);
@@ -1187,6 +1190,7 @@ public final class PowerManagerService extends SystemService
             mWakefulnessChanging = false;
         }
     }
+
 
     /**
      * Updates the global power state based on dirty bits recorded in mDirty.

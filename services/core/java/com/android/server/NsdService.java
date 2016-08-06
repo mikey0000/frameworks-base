@@ -435,6 +435,13 @@ public class NsdService extends INsdManager.Stub {
                         /* NNN uniqueId serviceName regType domain */
                         if (DBG) Slog.d(TAG, "SERVICE_FOUND Raw: " + raw);
                         servInfo = new NsdServiceInfo(cooked[2], cooked[3]);
+
+                        try {
+                            if (DBG) Slog.d(TAG, "wait 100 ms");
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            Slog.e(TAG, "sleep 100 ms error");
+                        }
                         clientInfo.mChannel.sendMessage(NsdManager.SERVICE_FOUND, 0,
                                 clientId, servInfo);
                         break;
@@ -442,6 +449,13 @@ public class NsdService extends INsdManager.Stub {
                         /* NNN uniqueId serviceName regType domain */
                         if (DBG) Slog.d(TAG, "SERVICE_LOST Raw: " + raw);
                         servInfo = new NsdServiceInfo(cooked[2], cooked[3]);
+
+                        try {
+                            if (DBG) Slog.d(TAG, "wait 100 ms");
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            Slog.e(TAG, "sleep 100 ms error");
+                        }
                         clientInfo.mChannel.sendMessage(NsdManager.SERVICE_LOST, 0,
                                 clientId, servInfo);
                         break;

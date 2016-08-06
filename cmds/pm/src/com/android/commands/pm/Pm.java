@@ -139,6 +139,11 @@ public final class Pm {
             return runDump();
         }
 
+        if ("preinstall".equals(op)) {
+            preInstall();
+            return 1;
+        }
+
         if ("install".equals(op)) {
             return runInstall();
         }
@@ -857,6 +862,57 @@ public final class Pm {
             return 1;
         }
     }
+	
+    private void preInstall() {
+        String path = nextArg();
+        int i;
+
+        System.err.println("\t preInstall path: " + path);
+        if (path == null) {
+            System.err.println("Error: no package specified");
+            showUsage();
+            return;
+        }
+
+        File[] files = new File(path).listFiles();
+        if (null != files) {
+            for(File apkFile : files) {
+                String apkFilePath = Uri.fromFile(apkFile).getPath();
+                System.err.println("\t apkFile: " + apkFile);
+                System.err.println("\t originPath: " + apkFilePath);
+                LocalPackageInstallObserver obs = new LocalPackageInstallObserver();
+                try {
+                    VerificationParams verificationParams = new VerificationParams(null,
+                            null, null, VerificationParams.NO_UID, null);
+
+                    mPm.installPackage(apkFilePath, obs.getBinder(), 0, null, verificationParams, null);
+                    System.err.println("\t pkg----1------: ");
+                    synchronized (obs) {
+                        while (!obs.finished) {
+                            try {
+                                System.err.println("\t pkg----2------: ");
+                                obs.wait();
+                                System.err.println("\t pkg----3------: ");
+                            } catch (InterruptedException e) {
+                                System.err.println("\t pkg----4------: ");
+                            }
+                        }
+                        if (obs.result == PackageManager.INSTALL_SUCCEEDED) {
+                            System.out.println("Success");
+                        } else {
+                            System.err.println("Failure ["
+                                + installFailureToString(obs)
+                                + "]");
+                        }
+                    }
+                } catch (RemoteException e) {
+                    System.err.println(e.toString());
+                    System.err.println(PM_NOT_RUNNING_ERR);
+                }
+            }
+        }
+        System.err.println("\t preInstall path: " + path + " ok");
+    }	
 
     private int runInstall() {
         int installFlags = 0;

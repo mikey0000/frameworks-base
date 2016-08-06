@@ -364,4 +364,7 @@
     <string name="quick_settings_reset_confirmation_title" msgid="748792586749897883">"要隐藏“<xliff:g id="TILE_LABEL">%1$s</xliff:g>”吗？"</string>
     <string name="quick_settings_reset_confirmation_message" msgid="2235970126803317374">"下次在设置中将其开启后，此快捷设置条目将会重新显示。"</string>
     <string name="quick_settings_reset_confirmation_button" msgid="2660339101868367515">"隐藏"</string>
+    <!-- ethernet string  -->
+    <string name="ethernet_link">以太网连接到网络</string>
+    <string name="ethernet_description">以太网络</string>
 </resources>

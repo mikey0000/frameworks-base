@@ -100,6 +100,8 @@ public class AlarmManager
      */
     public static final int ELAPSED_REALTIME = 3;
 
+    public static final int RTC_SHUTDOWN_WAKEUP = 4;
+
     /**
      * Broadcast Action: Sent after the value returned by
      * {@link #getNextAlarmClock()} has changed.

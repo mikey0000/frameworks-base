@@ -34,6 +34,7 @@
 #include <utils/Log.h>
 #include <utils/Looper.h>
 #include <utils/threads.h>
+#include <cutils/properties.h>
 
 #include <input/PointerController.h>
 #include <input/SpriteController.h>
@@ -1036,6 +1037,23 @@ static void nativeSetDisplayViewport(JNIEnv* env, jclass clazz, jlong ptr, jbool
         jint deviceWidth, jint deviceHeight) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
 
+    if(!external)
+    {
+        char property[PROPERTY_VALUE_MAX];
+        if (property_get("ro.sf.rotation", property, NULL) > 0) {
+            switch (atoi(property)) {
+                case 90:
+                    orientation = (orientation + 1) % 4;
+                    break;
+                case 180:
+                    orientation = (orientation + 2) % 4;
+                    break;
+                case 270:
+                    orientation = (orientation + 3) % 4;
+                    break;
+            }
+        }
+    }
     DisplayViewport v;
     v.displayId = displayId;
     v.orientation = orientation;
@@ -1266,6 +1284,35 @@ static void nativeSetShowTouches(JNIEnv* env,
     im->setShowTouches(enabled);
 }
 
+static void android_server_InputManager_nativeKeyEnterMouseMode(JNIEnv* env, jclass clazz, jlong ptr) 
+{
+    NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+    im->getInputManager()->getReader()->keyEnterMouseMode();
+}
+
+static void android_server_InputManager_nativeKeyExitMouseMode(JNIEnv* env, jclass clazz, jlong ptr) 
+{
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+    im->getInputManager()->getReader()->keyExitMouseMode();
+}
+
+static void android_server_InputManager_nativeKeySetMouseBtnCode(JNIEnv* env, jclass clazz,jlong ptr,jint leftbtn,jint midbtn,jint rightbtn) 
+{
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+    im->getInputManager()->getReader()->keySetMouseBtnCode((int)leftbtn,(int)midbtn,(int)rightbtn);
+}
+
+static void android_server_InputManager_nativeKeySetMouseDistance(JNIEnv* env, jclass clazz,jlong ptr,jint distance) 
+{
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+    im->getInputManager()->getReader()->keySetMouseDistance((int)distance);
+}
+
+static void android_server_InputManager_nativeKeySetMouseMoveCode(JNIEnv* env, jclass clazz,jlong ptr,jint left,jint right,jint top,jint bottom) 
+{
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+    im->getInputManager()->getReader()->keySetMouseMoveCode((int)left,(int)right,(int)top,(int)bottom);
+}
 static void nativeSetInteractive(JNIEnv* env,
         jclass clazz, jlong ptr, jboolean interactive) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
@@ -1399,6 +1446,16 @@ static JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeDump },
     { "nativeMonitor", "(J)V",
             (void*) nativeMonitor },
+    { "nativeKeyEnterMouseMode", "(J)V",
+            (void*) android_server_InputManager_nativeKeyEnterMouseMode},
+    { "nativeKeyExitMouseMode", "(J)V",
+            (void*) android_server_InputManager_nativeKeyExitMouseMode},
+    { "nativeKeySetMouseDistance", "(JI)V",
+            (void*) android_server_InputManager_nativeKeySetMouseDistance},
+    { "nativeKeySetMouseMoveCode", "(JIIII)V",
+            (void*) android_server_InputManager_nativeKeySetMouseMoveCode},
+    { "nativeKeySetMouseBtnCode", "(JIII)V",
+            (void*) android_server_InputManager_nativeKeySetMouseBtnCode},
 };
 
 #define FIND_CLASS(var, className) \

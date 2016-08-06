@@ -1857,7 +1857,60 @@ public final class Settings {
          */
         @Deprecated
         public static final String MODE_RINGER = Global.MODE_RINGER;
+        /**
+         * @hide
+         */
+        public static final String ETHERNET_ON = Secure.ETHERNET_ON;
 
+//add for ethernet 2015.1.13
+        /**
+         * Whether to use static IP and other static network attributes.
+         * @hide 
+         * Set to 1 for true and 0 for false.
+         *
+         */
+        public static final String ETHERNET_USE_STATIC_IP = "ethernet_use_static_ip";
+
+        /**
+         * The static IP address.
+         * Example: "192.168.1.51"
+         * @hide
+         */
+        public static final String ETHERNET_STATIC_IP = "ethernet_static_ip";
+
+        /**
+         * If using static IP, the gateway's IP address.
+         * Example: "192.168.1.1"
+         * @hide
+	 *
+         */
+
+        public static final String ETHERNET_STATIC_GATEWAY = "ethernet_static_gateway";
+
+        /**
+         * If using static IP, the net mask.
+         * Example: "192.168.1.1"
+         * @hide
+         */
+
+        public static final String ETHERNET_STATIC_NETMASK = "ethernet_static_netmask";
+
+        /**
+         * If using static IP, the dns1 
+         * Example: "192.168.1.1"
+         * @hide
+         */
+
+        public static final String ETHERNET_STATIC_DNS1 = "ethernet_static_dns1";
+
+        /**
+         * If using static IP, the dns2.
+         * @hide
+	 * Example: "192.168.1.1"
+         */
+        public static final String ETHERNET_STATIC_DNS2 = "ethernet_static_dns2";
+
+//end add
         /**
          * Whether to use static IP and other static network attributes.
          * <p>
@@ -1865,6 +1918,7 @@ public final class Settings {
          *
          * @deprecated Use {@link WifiManager} instead
          */
+
         @Deprecated
         public static final String WIFI_USE_STATIC_IP = "wifi_use_static_ip";
 
@@ -1975,6 +2029,20 @@ public final class Settings {
          * Scaling factor for fonts, float.
          */
         public static final String FONT_SCALE = "font_scale";
+
+		/**
+		 * enable the screen adaption.
+		 * add by huanglong
+		 * @hide
+		*/
+		public static final String DISPLAY_ADAPTION_ENABLE = "display_adapter_enable";
+
+		/**
+		  * the display mode options.
+		  * add by huanglong
+		  * @hide
+		  */
+		public static final String DISPLAY_ADAPTION_MODE = "display_adaption_mode";
 
         /**
          * Name of an application package to be debugged.
@@ -2633,6 +2701,22 @@ public final class Settings {
          */
         public static final String EGG_MODE = "egg_mode";
 
+		/* add by allwinner */
+		public static final String BRIGHT_SYSTEM_MODE = "bright_system_mode";
+        public static final String BRIGHTNESS_LIGHT_MODE = "brightness_light_mode";
+        public static final String HDMI_OUTPUT_MODE = "hdmi_output_mode";
+        public static final String HDMI_FULL_SCREEN = "hdmi_full_screen";
+		public static final String HDMI_PERSENT = "hdmi_persent";
+
+        public static final String GESTURE_SCREENSHOT_ENABLE = "gesture_screenshot_enable";
+        public static final String GESTURE_SCREENRECORD_ENABLE = "gesture_screenrecord_enable";
+		public static final String MOUSE_ADVANCE = "mouse_advance";
+        /*
+         * kill background services
+         * @hide
+         */
+        public static final String KILL_BACKGROUND_SERVICES = "kill_background_services";
+
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
@@ -2699,7 +2783,11 @@ public final class Settings {
             VIBRATE_WHEN_RINGING,
             RINGTONE,
             LOCK_TO_APP_ENABLED,
-            NOTIFICATION_SOUND
+            NOTIFICATION_SOUND,
+            BRIGHT_SYSTEM_MODE,
+            BRIGHTNESS_LIGHT_MODE,
+            HDMI_OUTPUT_MODE,
+            HDMI_FULL_SCREEN
         };
 
         /**
@@ -3842,6 +3930,12 @@ public final class Settings {
         public static final String ACCESSIBILITY_SPEAK_PASSWORD = "speak_password";
 
         /**
+         *
+         * @hide
+         */
+        public static final String ETHERNET_ON = "ethernet_on";
+
+        /**
          * Whether to draw text with high contrast while in accessibility mode.
          *
          * @hide
@@ -4109,6 +4203,13 @@ public final class Settings {
          * @hide
          */
         public static final String LONG_PRESS_TIMEOUT = "long_press_timeout";
+
+         /**
+         * Configuration of start system print service by default.
+         * @hide
+         */
+        public static final String DEFAULT_ENABLE_SYSTEM_PRINT_SERVICES =
+            "default_enable_system_print_services";
 
         /**
          * List of the enabled print services.

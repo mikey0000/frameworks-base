@@ -439,6 +439,12 @@ public class AssetAtlasService extends IAssetAtlas.Stub {
             Log.d(LOG_TAG, String.format("Found best atlas configuration in %.2fs", delay));
         }
 
+        if (results.isEmpty()) {
+            if (!SystemProperties.getBoolean("persist.sys.boot.first", true)) {
+                SystemProperties.set("persist.sys.boot.first", "1");
+            }
+            return null;
+        }
         WorkerResult result = results.get(0);
         return new Configuration(result.type, result.width, result.height, result.count);
     }

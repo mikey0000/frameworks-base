@@ -208,6 +208,7 @@ static void EnableKeepCapabilities(JNIEnv* env) {
 }
 
 static void DropCapabilitiesBoundingSet(JNIEnv* env) {
+/*
   for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {
     int rc = prctl(PR_CAPBSET_DROP, i, 0, 0, 0);
     if (rc == -1) {
@@ -220,6 +221,7 @@ static void DropCapabilitiesBoundingSet(JNIEnv* env) {
       }
     }
   }
+*/
 }
 
 static void SetCapabilities(JNIEnv* env, int64_t permitted, int64_t effective) {

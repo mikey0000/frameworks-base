@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace android {
 
@@ -49,6 +50,8 @@ namespace android {
         uint64_t range[2];
         int ret;
         uint64_t len = get_block_device_size(fd);
+        uint64_t i;
+        char buf[512];
 
         range[0] = 0;
         range[1] = len;
@@ -64,7 +67,15 @@ namespace android {
             ret = ioctl(fd, BLKDISCARD, &range);
             if (ret < 0) {
                 ALOGE("Discard failed: %s\n", strerror(errno));
-                return -1;
+                // nand not support and we write 0 into block.
+                memset(buf, 0, 512);
+                i = len;
+                while (i > 0) {
+                    write(fd, buf, 512);
+                    i--;
+                }
+                ALOGI("We wipe block by writing 0\n");
+                return 0;
             } else {
                 ALOGE("Wipe via secure discard failed, used non-secure discard instead\n");
                 return 0;

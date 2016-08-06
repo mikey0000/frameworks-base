@@ -103,6 +103,9 @@ public abstract class SubtitleTrack implements MediaTimeProvider.OnMediaTimeList
      */
     public abstract void onData(byte[] data, boolean eos, long runID);
 
+	public void onData(String data, boolean eos, long runID) {
+		return;
+	}
     /**
      * Called when adding the subtitle rendering widget to the view hierarchy,
      * as well as when showing or hiding the subtitle track, or when the video

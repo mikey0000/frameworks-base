@@ -37,6 +37,9 @@ public class SystemGesturesPointerEventListener implements PointerEventListener 
     private static final int SWIPE_FROM_BOTTOM = 2;
     private static final int SWIPE_FROM_RIGHT = 3;
 
+    private static final int SWEEP_START_THRESHLOD = 200;
+    private static final int SWEEP_DISTANCE_THRESHLOD = 30;
+
     private final int mSwipeStartThreshold;
     private final int mSwipeDistanceThreshold;
     private final Callbacks mCallbacks;
@@ -88,6 +91,21 @@ public class SystemGesturesPointerEventListener implements PointerEventListener 
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mSwipeFireable) {
+                    if (event.getPointerCount() == 2) {
+                        final int sweep = detectSweep(event, 2);
+                        mSwipeFireable = sweep == SWIPE_NONE;
+                        if (sweep == SWIPE_FROM_RIGHT) {
+                            mCallbacks.onSweepFromRight(2);
+                        }
+                        break;
+                    } else if(event.getPointerCount() ==3) {
+                        final int sweep = detectSweep(event, 3);
+                        mSwipeFireable = sweep == SWIPE_NONE;
+                        if (sweep == SWIPE_FROM_RIGHT) {
+                            mCallbacks.onSweepFromRight(3);
+                        }
+                        break;
+                    }
                     final int swipe = detectSwipe(event);
                     mSwipeFireable = swipe == SWIPE_NONE;
                     if (swipe == SWIPE_FROM_TOP) {
@@ -137,6 +155,43 @@ public class SystemGesturesPointerEventListener implements PointerEventListener 
         }
         mDownPointerId[mDownPointers++] = pointerId;
         return mDownPointers - 1;
+    }
+
+
+    private int detectSweep(MotionEvent move, int pointCount) {
+        int[] sweeps = new int[pointCount];
+        final int historySize = move.getHistorySize();
+        for (int p = 0; p < pointCount; p++) {
+            final int pointerId = move.getPointerId(p);
+            final int i = findIndex(pointerId);
+            if (i != UNTRACKED_POINTER && i < pointCount) {
+                for (int h = 0; h < historySize; h++) {
+                    final long time = move.getHistoricalEventTime(h);
+                    final float x = move.getHistoricalX(p, h);
+                    final float y = move.getHistoricalY(p,  h);
+                    sweeps[i] = detectSwipe(i, time, x, y);
+                    if (sweeps[i] != sweeps[0]) {
+                        return SWIPE_NONE;
+                    }
+                }
+                sweeps[i] = detectSweep(i, move.getEventTime(), move.getX(p), move.getY(p));
+                if (sweeps[0] != sweeps[i])
+                    return SWIPE_NONE;
+            }
+        }
+        return sweeps[0];
+    }
+
+    private int detectSweep(int i, long time, float x, float y) {
+            final float fromX = mDownX[i];
+            final float fromY = mDownY[i];
+            final long elapsed = time - mDownTime[i];
+            if (fromX >= screenWidth - SWEEP_START_THRESHLOD
+                    && x < fromX - SWEEP_DISTANCE_THRESHLOD
+                    && elapsed < SWIPE_TIMEOUT_MS) {
+                    return SWIPE_FROM_RIGHT;
+            }
+            return SWIPE_NONE;
     }
 
     private int detectSwipe(MotionEvent move) {
@@ -192,6 +247,7 @@ public class SystemGesturesPointerEventListener implements PointerEventListener 
         void onSwipeFromTop();
         void onSwipeFromBottom();
         void onSwipeFromRight();
+        void onSweepFromRight(int pCount);
         void onDebug();
     }
 }

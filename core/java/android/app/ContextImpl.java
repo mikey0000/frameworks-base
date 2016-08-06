@@ -2406,6 +2406,7 @@ class ContextImpl extends Context {
      */
     private File[] ensureDirsExistOrFilter(File[] dirs) {
         File[] result = new File[dirs.length];
+        int len = 0;
         for (int i = 0; i < dirs.length; i++) {
             File dir = dirs[i];
             if (!dir.exists()) {
@@ -2428,9 +2429,10 @@ class ContextImpl extends Context {
                     }
                 }
             }
-            result[i] = dir;
+            if (dir != null)
+                result[len++] = dir;
         }
-        return result;
+        return java.util.Arrays.copyOf(result, len);
     }
 
     // ----------------------------------------------------------------------

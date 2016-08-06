@@ -525,7 +525,7 @@ public class TaskStackView extends FrameLayout implements TaskStack.TaskStackCal
 
         Task t = mStack.getTasks().get(mFocusedTaskIndex);
         TaskView tv = getChildViewForTask(t);
-        tv.dismissTask();
+        if (tv != null) tv.dismissTask();
     }
 
     /** Resets the focused task. */

@@ -77,6 +77,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Debug;
+import android.os.DynamicPManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.IRemoteCallback;
@@ -203,6 +204,8 @@ public class WindowManagerService extends IWindowManager.Stub
     static final boolean PROFILE_ORIENTATION = false;
     static final boolean localLOGV = DEBUG;
 
+    private boolean rotation_boostuperf_enable = false;
+    private boolean rotation_mode_exit = false;
     /** How much to multiply the policy's type layer, to reserve room
      * for multiple windows of the same type and Z-ordering adjustment
      * with TYPE_LAYER_OFFSET. */
@@ -618,14 +621,16 @@ public class WindowManagerService extends IWindowManager.Stub
     PowerManager mPowerManager;
     PowerManagerInternal mPowerManagerInternal;
 
-    float mWindowAnimationScaleSetting = 1.0f;
-    float mTransitionAnimationScaleSetting = 1.0f;
+    float mWindowAnimationScaleSetting = 0.5f;
+    float mTransitionAnimationScaleSetting = 0.5f;
     float mAnimatorDurationScaleSetting = 1.0f;
     boolean mAnimationsDisabled = false;
 
     final InputManagerService mInputManager;
     final DisplayManagerInternal mDisplayManagerInternal;
     final DisplayManager mDisplayManager;
+
+    private DynamicPManager mDPM = DynamicPManager.getInstance();
 
     // Who is holding the screen on.
     Session mHoldingScreenOn;
@@ -5576,6 +5581,11 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
+    @Override
+    public void reboot(String reason, boolean confirm) {
+        ShutdownThread.reboot(mContext, reason, confirm);
+    }
+
     // Called by window manager policy. Not exposed externally.
     @Override
     public int getCameraLensCoverState() {
@@ -5659,9 +5669,9 @@ public class WindowManagerService extends IWindowManager.Stub
             }
             mSystemBooted = true;
             hideBootMessagesLocked();
-            // If the screen still doesn't come up after 30 seconds, give
+            // If the screen still doesn't come up after 300 seconds, give
             // up and turn it on.
-            mH.sendEmptyMessageDelayed(H.BOOT_TIMEOUT, 30*1000);
+            mH.sendEmptyMessageDelayed(H.BOOT_TIMEOUT, 300*1000);
         }
 
         mPolicy.systemBooted();
@@ -5820,6 +5830,7 @@ public class WindowManagerService extends IWindowManager.Stub
 
         // Make sure the last requested orientation has been applied.
         updateRotationUnchecked(false, false);
+               rotation_boostuperf_enable = true;
     }
 
     private boolean checkBootAnimationCompleteLocked() {
@@ -6401,6 +6412,18 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
+    private void rotation_boostup_perf(String mode){
+        //need rotation, now boost up perf
+        if(mSystemBooted && (rotation_boostuperf_enable == true)){
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_BOOST_UP_PERF);
+            intent.putExtra("mode", mode);
+            if (mDPM == null){
+                mDPM = DynamicPManager.getInstance();
+            }
+            mDPM.notifyDPM(intent);
+        }
+    }
     public void updateRotationUnchecked(boolean alwaysSendConfiguration, boolean forceRelayout) {
         if(DEBUG_ORIENTATION) Slog.v(TAG, "updateRotationUnchecked("
                    + "alwaysSendConfiguration=" + alwaysSendConfiguration + ")");
@@ -6416,6 +6439,8 @@ public class WindowManagerService extends IWindowManager.Stub
         }
 
         if (changed || alwaysSendConfiguration) {
+            rotation_boostup_perf(DynamicPManager.BOOST_UPERF_ROTATENTER);
+            rotation_mode_exit = false;
             sendNewConfiguration();
         }
 
@@ -7695,6 +7720,10 @@ public class WindowManagerService extends IWindowManager.Stub
                     synchronized(mWindowMap) {
                         mTraversalScheduled = false;
                         performLayoutAndPlaceSurfacesLocked();
+                    }
+                    if(rotation_mode_exit == true){
+                        rotation_boostup_perf(DynamicPManager.BOOST_UPERF_ROTATEXIT);
+                        rotation_mode_exit = false;
                     }
                 } break;
 
@@ -10646,6 +10675,7 @@ public class WindowManagerService extends IWindowManager.Stub
             sb.append(mLastFinishedFreezeSource);
         }
         Slog.i(TAG, sb.toString());
+        rotation_mode_exit = true;
         mH.removeMessages(H.APP_FREEZE_TIMEOUT);
         mH.removeMessages(H.CLIENT_FREEZE_TIMEOUT);
         if (PROFILE_ORIENTATION) {
@@ -10891,6 +10921,32 @@ public class WindowManagerService extends IWindowManager.Stub
     public boolean isSafeModeEnabled() {
         return mSafeMode;
     }
+	public void keyEnterMouseMode() 
+    {
+        Log.d(TAG,"keyEnterMouseMode");
+        mInputManager.KeyEnterMouseMode();
+    }
+
+	public void keyExitMouseMode() 
+    {
+        Log.d(TAG,"keyExitMouseMode");
+        mInputManager.KeyExitMouseMode();
+    }
+
+	public void keySetMouseMoveCode(int left,int right,int top,int bottom) 
+    {
+        mInputManager.KeySetMouseMoveCode(left,right,top,bottom);
+    }
+
+	public void keySetMouseBtnCode(int leftbtn,int midbtn,int rightbtn)
+	{
+		mInputManager.KeySetMouseBtnCode(leftbtn,midbtn,rightbtn);
+	}
+
+	public void keySetMouseDistance(int distance)
+	{
+		mInputManager.KeySetMouseDistance(distance);
+	}
 
     @Override
     public boolean clearWindowContentFrameStats(IBinder token) {

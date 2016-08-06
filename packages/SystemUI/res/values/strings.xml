@@ -916,4 +916,8 @@
 
     <!-- Hide quick settings tile confirmation button -->
     <string name="quick_settings_reset_confirmation_button">Hide</string>
+
+    <!-- ethernet string  -->
+    <string name="ethernet_link">Ethernet connect to network</string>
+    <string name="ethernet_description">Ethernet</string>
 </resources>

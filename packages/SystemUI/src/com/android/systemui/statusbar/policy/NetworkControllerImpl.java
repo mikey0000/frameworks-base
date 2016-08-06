@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
+import android.net.EthernetManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
@@ -89,6 +90,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
     private final Context mContext;
     private final TelephonyManager mPhone;
     private final WifiManager mWifiManager;
+    private final EthernetManager mEthernetManager;
     private final ConnectivityManager mConnectivityManager;
     private final SubscriptionManager mSubscriptionManager;
     private final boolean mHasMobileDataFeature;
@@ -109,6 +111,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
     // Network types that replace the carrier label if the device does not support mobile data.
     private boolean mBluetoothTethered = false;
     private boolean mEthernetConnected = false;
+    private boolean mEthernetBroadcastConnected = false;
 
     // state of inet connection
     private boolean mConnected = false;
@@ -172,6 +175,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
         // wifi
         mWifiManager = wifiManager;
 
+        // ethernet
+        mEthernetManager = (EthernetManager)context.getSystemService(Context.ETHERNET_SERVICE);
+
         mLocale = mContext.getResources().getConfiguration().locale;
         mAccessPoints = accessPointController;
         mMobileDataController = mobileDataController;
@@ -202,6 +208,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        filter.addAction(EthernetManager.ETHERNET_STATE_CHANGED_ACTION);
+        filter.addAction(EthernetManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED);
@@ -396,7 +404,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
         } else if (action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
             // Might have different subscriptions now.
             updateMobileControllers();
-        } else {
+        } else if (action.equals(EthernetManager.NETWORK_STATE_CHANGED_ACTION)) {
+            handleEhernetBroadcast(intent);
+        }else {
             int subId = intent.getIntExtra(PhoneConstants.SUBSCRIPTION_KEY,
                     SubscriptionManager.INVALID_SUBSCRIPTION_ID);
             if (SubscriptionManager.isValidSubscriptionId(subId)) {
@@ -409,6 +419,18 @@ public class NetworkControllerImpl extends BroadcastReceiver
             } else {
                 // No sub id, must be for the wifi.
                 mWifiSignalController.handleBroadcast(intent);
+            }
+        }
+    }
+
+    void handleEhernetBroadcast(Intent intent) {
+        NetworkInfo nwInfo = (NetworkInfo) intent.getExtra(EthernetManager.EXTRA_NETWORK_INFO);
+        if ((nwInfo != null) && (mEthernetBroadcastConnected != nwInfo.isConnected())) {
+            mEthernetBroadcastConnected = nwInfo.isConnected();
+            int signalClustersLength = mSignalClusters.size();
+            for (int i = 0; i < signalClustersLength; i++) {
+                mSignalClusters.get(i).setEthernetIndicators(mEthernetBroadcastConnected, R.drawable.stat_sys_ethernet_established,
+                        mContext.getString(R.string.ethernet_description));
             }
         }
     }
@@ -445,6 +467,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
     @VisibleForTesting
     protected void updateNoSims() {
         boolean hasNoSims = mHasMobileDataFeature && mMobileSignalControllers.size() == 0;
+        if (!mMobileDataController.isMobileDataSupported()) {
+            hasNoSims = false;
+        }
         if (hasNoSims != mHasNoSims) {
             mHasNoSims = hasNoSims;
             notifyListeners();
@@ -864,7 +889,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         public void notifyListeners() {
             // only show wifi in the cluster if connected or if wifi-only
             boolean wifiVisible = mCurrentState.enabled
-                    && (mCurrentState.connected || !mHasMobileData);
+                    /*&& (mCurrentState.connected || !mHasMobileData)*/;
             String wifiDesc = wifiVisible ? mCurrentState.ssid : null;
             boolean ssidPresent = wifiVisible && mCurrentState.ssid != null;
             String contentDescription = getStringIfExists(getContentDescription());
@@ -1212,7 +1237,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
             int signalClustersLength = mSignalClusters.size();
             for (int i = 0; i < signalClustersLength; i++) {
                 mSignalClusters.get(i).setMobileDataIndicators(
-                        mCurrentState.enabled && !mCurrentState.airplaneMode,
+                        mCurrentState.connected && mCurrentState.enabled && !mCurrentState.airplaneMode,
                         getCurrentIconId(),
                         typeIcon,
                         contentDescription,
@@ -1782,6 +1807,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
     public interface SignalCluster {
         void setWifiIndicators(boolean visible, int strengthIcon, String contentDescription);
+
+        void setEthernetIndicators(boolean visible, int strengthIcon, String contentDescription);
 
         void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
                 String contentDescription, String typeContentDescription, boolean isTypeIconWide,

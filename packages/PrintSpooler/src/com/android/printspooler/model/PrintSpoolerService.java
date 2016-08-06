@@ -636,7 +636,7 @@ public final class PrintSpoolerService extends Service {
                     return;
                 }
             }
-            throw new IllegalArgumentException("No print job with id:" + printJob.getId());
+            //throw new IllegalArgumentException("No print job with id:" + printJob.getId());
         }
     }
 

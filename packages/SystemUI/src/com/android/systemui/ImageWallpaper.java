@@ -211,7 +211,7 @@ public class ImageWallpaper extends WallpaperService {
                 final int dw = frame.width();
                 final int dh = frame.height();
                 if (surfaceWidth == dw && surfaceHeight == dh) {
-                    return;
+                    // return;
                 }
             }
 

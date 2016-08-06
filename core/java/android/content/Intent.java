@@ -808,6 +808,11 @@ public class Intent implements Parcelable, Cloneable {
             return resourceName;
         }
     }
+    /*
+     * start aw boost up performance
+     */
+
+    public static final String ACTION_BOOST_UP_PERF = "android.intent.action.BOOST_UP_PERF";
 
     /**
      * Activity Action: Display an activity chooser, allowing the user to pick

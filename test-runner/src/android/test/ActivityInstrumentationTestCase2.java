@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Intent;
 
 import java.lang.reflect.Method;
+import android.util.Log;
 
 /**
  * This class provides functional testing of a single activity.  The activity under test will
@@ -172,6 +173,14 @@ public abstract class ActivityInstrumentationTestCase2<T extends Activity>
         scrubClass(ActivityInstrumentationTestCase2.class);
 
         super.tearDown();
+        // setUp function will do setTouchMode(false) which will hava bad impact on the following test(android.host.theme),
+        // so we do setInTouchMode(true) at the nearest ActivityInstrumentationTestCase2 just before android.host.theme.
+        // nexus devices will not have this problem, because nexus got lots of sensors and will spend more time on android.hardware test,
+        // that leads to a reboot between android.hardware test and android.host.theme test. 
+        if (getClass().getName().equals("android.hardware.cts.Camera_SizeTest")) {
+            Log.d("Leon", "android.hardware.cts.Camera_SizeTest - > tearDown -> setInTouchMode(true)");
+            getInstrumentation().setInTouchMode(true);
+        }
     }
 
     /**

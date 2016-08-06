@@ -32,6 +32,9 @@ import android.os.SystemProperties;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -68,7 +71,14 @@ public class FlashlightController {
 
     public FlashlightController(Context mContext) {
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
-        initialize();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BOOT_COMPLETED);
+        filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        mContext.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                initialize();
+            }
+        }, filter);
     }
 
     public void initialize() {

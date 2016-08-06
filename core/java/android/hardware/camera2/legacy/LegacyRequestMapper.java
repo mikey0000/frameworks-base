@@ -204,7 +204,7 @@ public class LegacyRequestMapper {
         // control.aeLock
         {
             Boolean aeLock = getIfSupported(request, CONTROL_AE_LOCK, /*defaultValue*/false,
-                    params.isAutoExposureLockSupported(),
+	                   params.isAutoExposureLockSupported(),
                     /*allowedValue*/false);
 
             if (aeLock != null) {
