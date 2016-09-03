@@ -48,7 +48,7 @@ LOCAL_SHARED_LIBRARIES :=
 # include all the jni subdirs to collect their sources
 include $(wildcard $(LOCAL_PATH)/*/jni/Android.mk)
 
-LOCAL_CFLAGS += -DEGL_EGLEXT_PROTOTYPES -DGL_GLEXT_PROTOTYPES
+LOCAL_CFLAGS += -DEGL_EGLEXT_PROTOTYPES -DGL_GLEXT_PROTOTYPES -fno-stack-protector
 
 LOCAL_MODULE:= libandroid_servers
 
@@ -66,4 +66,3 @@ else
 # modules.
 include $(patsubst %,$(LOCAL_PATH)/%/Android.mk,$(services))
 endif
-

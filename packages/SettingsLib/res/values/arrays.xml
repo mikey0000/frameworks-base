@@ -100,6 +100,30 @@
         <item>Always use HDCP checking</item>
     </string-array>
 
+    <!-- Summaries for HDMI resolution preference [CHAR LIMIT=60] -->
+    <string-array name="hdmi_resolution_titles">
+        <item>HDMI 720P 60HZ</item>
+        <item>HDMI 1080P 60HZ</item>
+        <item>HDMI 2160P 30HZ</item>
+    </string-array>
+
+    <!-- Values for HDMI resolution preference DO NOT TRANSLATE -->
+    <string-array name="hdmi_resolution_values" translatable="false" >
+        <!-- Do not translate. -->
+        <item>5</item>
+        <!-- Do not translate. -->
+        <item>10</item>
+        <!-- Do not translate. -->
+        <item>28</item>
+    </string-array>
+
+    <!-- Titles for HDMI resolution preference [CHAR LIMIT=60] -->
+    <string-array name="hdmi_resolution_summaries">
+        <item>HDMI 720P 60HZ</item>
+        <item>HDMI 1080P 60HZ</item>
+        <item>HDMI 2160P 30HZ</item>
+    </string-array>
+
     <!-- Titles for logd limit size selection preference. [CHAR LIMIT=14] -->
     <string-array name="select_logd_size_titles">
         <item>Off</item>
