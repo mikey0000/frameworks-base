@@ -37,6 +37,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UEventObserver;
@@ -150,6 +151,9 @@ public class UsbDeviceManager {
     private UsbDebuggingManager mDebuggingManager;
     private final UsbAlsaManager mUsbAlsaManager;
     private Intent mBroadcastedIntent;
+    
+    private PowerManager.WakeLock wl;
+    private int wlref = 0;
 
     private class AdbSettingsObserver extends ContentObserver {
         public AdbSettingsObserver() {
@@ -198,6 +202,9 @@ public class UsbDeviceManager {
         PackageManager pm = mContext.getPackageManager();
         mHasUsbAccessory = pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY);
         initRndisAddress();
+        
+        PowerManager power = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        wl = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
         readOemUsbOverrideConfig();
 
@@ -263,6 +270,20 @@ public class UsbDeviceManager {
 
     public void updateUserRestrictions() {
         mHandler.sendEmptyMessage(MSG_UPDATE_USER_RESTRICTIONS);
+    }
+    
+    private void enableWakeLock(boolean enable){
+        if (enable) {
+            if (wlref == 0) {
+                wlref++;
+                wl.acquire();
+            }
+        } else {
+            if (wlref == 1) {
+                wl.release();
+                wlref--;
+            }
+        }
     }
 
     private void startAccessoryMode() {
@@ -703,6 +724,7 @@ public class UsbDeviceManager {
                         // When a disconnect occurs, relock access to sensitive user data
                         mUsbDataUnlocked = false;
                     }
+                    enableWakeLock(mConnected);
                     updateUsbNotification();
                     updateAdbNotification();
                     if (UsbManager.containsFunction(mCurrentFunctions,
